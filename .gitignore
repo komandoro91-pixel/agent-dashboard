@@ -1,0 +1,27 @@
+# Secrets
+.env
+.env.local
+.env*.local
+
+# Local dev only (not needed on Vercel)
+server.py
+event-collector.py
+orbital.html
+/index.html
+/index.html.bak
+/index.html.backup-pre-iso
+mockups/
+sprites/
+
+# Local dev data
+events/
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel
