@@ -39,6 +39,7 @@ function computeState(events, startTs) {
       sess.status = 'ended';
       pending[sid] = [];
     } else if (phase === 'start') {
+      if (sess.status === 'ended') sess.status = 'active'; // реактивация после mid-session Stop
       if (tool !== 'Agent') {
         sess.tool_count += 1;
         sess.recent_tool = tool;
@@ -136,3 +137,5 @@ module.exports = async function handler(req, res) {
 
   return res.status(200).json(computeState(events, startTs));
 };
+
+module.exports.computeState = computeState;
