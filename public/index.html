@@ -1195,7 +1195,11 @@ function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase) {
   const shadowMesh=new THREE.Mesh(new THREE.CircleGeometry(base*.85,16),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.28}));
   shadowMesh.position.set(0,0,-base*.05); shadowMesh.scale.set(1,.4,1); group.add(shadowMesh);
 
-  group.rotation.z = faceAngle - Math.PI/2;
+  // Face toward monitor (XY rotation) + forward lean to counter scene 15° tilt
+  const _qFace = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), faceAngle - Math.PI/2);
+  const _tiltAxis = new THREE.Vector3(-Math.sin(faceAngle), Math.cos(faceAngle), 0);
+  const _qTilt = new THREE.Quaternion().setFromAxisAngle(_tiltAxis, 0.30);
+  group.quaternion.multiplyQuaternions(_qTilt, _qFace);
   group.position.set(threeX, threeY, 0);
   group.userData.phase=phase; group.userData.canvasY=canvasY; group.userData.baseScale=pscale;
   return group;
