@@ -58,7 +58,7 @@ function computeState(events, startTs) {
       }
     } else if (phase === 'end') {
       if (ev.is_agent && pending[sid]) {
-        const agentType = ev.agent_type || '';
+        const agentType = ev.agent_type || 'general-purpose';
         const idx = pending[sid].findIndex(ag => ag.agent_type === agentType);
         if (idx >= 0) {
           const doneAg = pending[sid].splice(idx, 1)[0];
@@ -70,7 +70,7 @@ function computeState(events, startTs) {
     }
   }
 
-  const AGENT_TTL_SEC = 60;
+  const AGENT_TTL_SEC = 600;
   for (const [sid, sess] of Object.entries(sessions)) {
     sess.active_agents = (pending[sid] || []).filter(ag => now - ag.started_at < AGENT_TTL_SEC);
     sess.completed_agents = (completed[sid] || []).slice(-20);

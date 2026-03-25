@@ -1315,12 +1315,20 @@ function spawnPenguin(agentKey, agentType) {
   stationColorMap[stationIdx] = c.fg;
   bgDirty = true;
 
-  penguinMap[agentKey] = { group, stationIdx, labelEl: el, pointLight: pl };
+  penguinMap[agentKey] = { group, stationIdx, labelEl: el, pointLight: pl, spawnedAt: Date.now() };
 }
+
+const MIN_ALIVE_MS = 30_000; // 30 seconds minimum visibility
 
 function despawnPenguin(agentKey) {
   const entry = penguinMap[agentKey];
   if (!entry) return;
+
+  if (entry.spawnedAt && Date.now() - entry.spawnedAt < MIN_ALIVE_MS) {
+    const remaining = MIN_ALIVE_MS - (Date.now() - entry.spawnedAt);
+    setTimeout(() => despawnPenguin(agentKey), remaining + 100);
+    return;
+  }
 
   scene.remove(entry.group);
   if (entry.pointLight) scene.remove(entry.pointLight);

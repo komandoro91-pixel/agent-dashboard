@@ -296,11 +296,11 @@ describe('active_penguins', () => {
     expect(result.active_penguins[0].agent_type).toBe('developer');
   });
 
-  it('agent started > 60s ago (TTL expired) is NOT in active_penguins', () => {
+  it('agent started > 600s ago (TTL expired) is NOT in active_penguins', () => {
     const base = now();
     const events = [
-      { ts: base - 120, session_id: 's1', phase: 'session_start', cwd: '/proj', session_type: 'vscode' },
-      { ts: base - 61,  session_id: 's1', phase: 'start', tool: 'Agent', is_agent: true, agent_type: 'researcher', detail: 'old task', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 700, session_id: 's1', phase: 'session_start', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 601, session_id: 's1', phase: 'start', tool: 'Agent', is_agent: true, agent_type: 'researcher', detail: 'old task', cwd: '/proj', session_type: 'vscode' },
       { ts: base - 2,   session_id: 's1', phase: 'start', tool: 'Bash', cwd: '/proj', session_type: 'vscode' },
     ];
     const result = computeState(events, 0);
