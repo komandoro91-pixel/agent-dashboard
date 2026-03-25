@@ -1317,25 +1317,22 @@ function despawnPenguin(agentKey) {
 //  APPLY STATE
 // ═══════════════════════════════════════════════════════════
 function applyState(newState) {
-  // Collect all active agent keys
+  // Collect all visible session keys
   const newKeys = new Set();
   for (const session of newState.sessions) {
-    for (const agent of (session.active_agents || [])) {
-      newKeys.add(agent.key);
-    }
+    newKeys.add(session.session_id);
   }
 
-  // Despawn gone agents
+  // Despawn gone sessions
   for (const key of Object.keys(penguinMap)) {
     if (!newKeys.has(key)) despawnPenguin(key);
   }
 
-  // Spawn new agents
+  // Spawn new sessions as penguins
   for (const session of newState.sessions) {
-    for (const agent of (session.active_agents || [])) {
-      if (!penguinMap[agent.key]) {
-        spawnPenguin(agent.key, agent.agent_type);
-      }
+    if (!penguinMap[session.session_id]) {
+      const role = session.session_type === 'vscode' ? 'researcher' : 'general-purpose';
+      spawnPenguin(session.session_id, role);
     }
   }
 
