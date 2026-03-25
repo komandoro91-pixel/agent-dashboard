@@ -1195,7 +1195,7 @@ function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase) {
   const shadowMesh=new THREE.Mesh(new THREE.CircleGeometry(base*.85,16),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.28}));
   shadowMesh.position.set(0,0,-base*.05); shadowMesh.scale.set(1,.4,1); group.add(shadowMesh);
 
-  group.rotation.z = Math.PI/2 - faceAngle;
+  group.rotation.z = faceAngle - Math.PI/2;
   group.position.set(threeX, threeY, 0);
   group.userData.phase=phase; group.userData.canvasY=canvasY; group.userData.baseScale=pscale;
   return group;
