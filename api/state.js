@@ -36,7 +36,7 @@ function computeState(events, startTs) {
       sess.started_at = ts;
       pending[sid] = [];
     } else if (phase === 'session_end') {
-      sess.status = 'idle';
+      sess.status = 'ended';
       pending[sid] = [];
     } else if (phase === 'start') {
       if (tool !== 'Agent') {
@@ -73,8 +73,33 @@ function computeState(events, startTs) {
     sess.completed_agents = (completed[sid] || []).slice(-20);
   }
 
+  // Deduplicate: merge sessions from same cwd+type that started within 60s of each other
+  // (VS Code creates 2 processes per tab with different session_ids)
+  const groupMap = {};
+  for (const sess of Object.values(sessions)) {
+    const key = `${sess.cwd}|||${sess.session_type}`;
+    if (!groupMap[key]) groupMap[key] = [];
+    groupMap[key].push(sess);
+  }
+  for (const group of Object.values(groupMap)) {
+    if (group.length < 2) continue;
+    group.sort((a, b) => b.last_event_ts - a.last_event_ts);
+    const primary = group[0];
+    for (const dup of group.slice(1)) {
+      if (Math.abs(primary.started_at - dup.started_at) < 60) {
+        primary.tool_count += dup.tool_count;
+        primary.started_at = Math.min(primary.started_at, dup.started_at);
+        primary.active_agents.push(...dup.active_agents);
+        primary.completed_agents.push(...dup.completed_agents);
+        dup.status = 'ended';
+      }
+    }
+  }
+
   const now = Date.now() / 1000;
-  const visible = Object.values(sessions).filter(s => now - s.last_event_ts < 300);
+  const visible = Object.values(sessions).filter(
+    s => s.status !== 'ended' && now - s.last_event_ts < 300
+  );
   const total_active = visible.filter(
     s => s.status === 'active' || s.active_agents.length > 0
   ).length;
