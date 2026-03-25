@@ -21,13 +21,16 @@ async function redisSet(key, value) {
   });
   return res.ok;
 }
-const lastTs = await redisGet('last_release_ts');
-if (lastTs) {
-  const lastDate = new Date(parseFloat(lastTs) * 1000).toISOString().split('T')[0];
-  const today = new Date().toISOString().split('T')[0];
-  if (lastDate === today) {
-    console.log(`Already updated today (${today}). Skipping.`);
-    process.exit(0);
+const isManual = process.env.GITHUB_EVENT_NAME === 'workflow_dispatch';
+if (!isManual) {
+  const lastTs = await redisGet('last_release_ts');
+  if (lastTs) {
+    const lastDate = new Date(parseFloat(lastTs) * 1000).toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
+    if (lastDate === today) {
+      console.log(`Already updated today (${today}). Skipping.`);
+      process.exit(0);
+    }
   }
 }
 
@@ -114,3 +117,8 @@ console.log('Redis updated with release info.');
 history.push({ date: new Date().toISOString().split('T')[0], note: patch.note });
 fs.writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2), 'utf-8');
 console.log('History updated.');
+
+// Signal to GitHub Actions that changes were made
+if (process.env.GITHUB_OUTPUT) {
+  fs.appendFileSync(process.env.GITHUB_OUTPUT, 'changed=true\n');
+}

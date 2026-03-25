@@ -33,6 +33,7 @@ jobs:
         run: npm install @anthropic-ai/sdk
 
       - name: Run daily update script
+        id: update
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
@@ -40,9 +41,10 @@ jobs:
         run: node scripts/daily-update.mjs
 
       - name: Commit and push changes
+        if: steps.update.outputs.changed == 'true'
         run: |
           git config user.name "Agent Dashboard Bot"
           git config user.email "bot@agent-dashboard.auto"
           git add public/index.html scripts/improvement-history.json
-          git diff --staged --quiet || git commit -m "chore(ui): daily auto-update $(date +%Y-%m-%d)"
+          git commit -m "chore(ui): daily auto-update $(date +%Y-%m-%d)"
           git push
