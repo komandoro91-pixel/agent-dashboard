@@ -522,7 +522,7 @@ let firstSessionStartedAt = null;
 //  CANVAS OFFICE — coordinate space
 // ═══════════════════════════════════════════════════════════
 const GW = 860, GH = 560;
-const CX = GW / 2, CY = GH / 2 - 5;
+const CX = GW / 2, CY = 350;
 const DESK_RADIUS = 145;
 const NUM_DESKS   = 6;
 
@@ -654,7 +654,7 @@ function drawRoom(g) {
   floorGrad.addColorStop(0, '#060d1a');
   floorGrad.addColorStop(1, '#040810');
   g.fillStyle = floorGrad;
-  g.fillRect(50, 165, GW - 100, GH - 170);
+  g.fillRect(50, 165, GW - 100, GH - 165);
 }
 
 // ── Space window (top panorama + black hole) ──
@@ -761,7 +761,7 @@ function drawSpaceWindow(g) {
 
 // ── Metal grid floor ──
 function drawFloor(g) {
-  const GRID = 38, floorX = 50, floorY = 165, floorW = GW - 100, floorH = GH - 170;
+  const GRID = 38, floorX = 50, floorY = 165, floorW = GW - 100, floorH = GH - 165;
   const pulse = 0.4 + 0.15 * Math.sin(ledPhase * 2.5);
   g.save(); g.beginPath(); g.rect(floorX, floorY, floorW, floorH); g.clip();
 
@@ -794,7 +794,7 @@ function drawFloor(g) {
 
 // ── Cyan floor shimmer ──
 function drawFloorShimmer(g) {
-  const GRID = 42, floorX = 50, floorY = 165, floorW = GW - 100, floorH = GH - 170;
+  const GRID = 42, floorX = 50, floorY = 165, floorW = GW - 100, floorH = GH - 165;
   g.save(); g.beginPath(); g.rect(floorX, floorY, floorW, floorH); g.clip();
 
   for (let row = 0; row * GRID < floorH + GRID; row++) {
@@ -831,7 +831,6 @@ function drawWalls(g) {
   const rwG = g.createLinearGradient(GW - wallW, 0, GW, 0);
   rwG.addColorStop(0, '#091524'); rwG.addColorStop(1, '#050b18');
   g.fillStyle = rwG; g.fillRect(GW - wallW, floorY, wallW, GH - floorY);
-  g.fillStyle = '#060d1c'; g.fillRect(0, GH - 22, GW, 22);
 
   const wGL = g.createLinearGradient(wallW, 0, 0, 0);
   wGL.addColorStop(0,   'rgba(26,100,220,0.40)');
@@ -1000,7 +999,7 @@ function drawAmbientGlow(g) {
   ledBloom.addColorStop(0,   `rgba(20,80,180,${0.08 + 0.05 * Math.sin(ledPhase * 2)})`);
   ledBloom.addColorStop(0.5, 'rgba(10,40,100,0.04)');
   ledBloom.addColorStop(1,   'rgba(0,0,0,0)');
-  g.fillStyle = ledBloom; g.fillRect(50, 165, GW-100, GH-170);
+  g.fillStyle = ledBloom; g.fillRect(50, 165, GW-100, GH-165);
 
   const stripY = 175;
   g.beginPath();
