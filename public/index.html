@@ -71,6 +71,14 @@ header{
   border-radius:20px;font-size:11px;color:var(--green);font-weight:500;
 }
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:lp 2s ease-in-out infinite}
+.release-chip{
+  display:flex;align-items:center;gap:5px;
+  padding:3px 10px;
+  background:rgba(129,140,248,.10);border:1px solid rgba(129,140,248,.20);
+  border-radius:20px;font-size:11px;color:var(--indigo);font-weight:500;
+  white-space:nowrap;
+}
+.release-chip-label{opacity:.6;margin-right:2px}
 @keyframes lp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
 .h-right{display:flex;align-items:center;gap:6px}
 .nav-btn{
@@ -393,6 +401,10 @@ header{
     </div>
     <div class="h-clock" id="clock">--:--:--</div>
     <div class="h-right" style="justify-self:end">
+      <div class="release-chip" id="release-chip" style="display:none">
+        <span class="release-chip-label">Last Release</span>
+        <span id="release-time"></span>
+      </div>
       <div class="h-meta">
         <span id="fps-counter">-- fps</span>
       </div>
@@ -1744,9 +1756,24 @@ renderSessions(currentState);
 renderTimeline();
 renderMetrics();
 
+async function fetchRelease() {
+  try {
+    const r = await fetch('/api/release');
+    const data = await r.json();
+    if (data.ts) {
+      const d = new Date(data.ts * 1000);
+      const fmt = d.toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit'}) + ' ' +
+                  d.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'});
+      document.getElementById('release-time').textContent = fmt + (data.note ? ' — ' + data.note : '');
+      document.getElementById('release-chip').style.display = 'flex';
+    }
+  } catch {}
+}
+
 // Start polling
 fetchState();
 fetchEvents();
+fetchRelease();
 setInterval(fetchState, 1500);
 setInterval(fetchEvents, 800);
 </script>
