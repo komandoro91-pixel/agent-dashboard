@@ -47,4 +47,5 @@ jobs:
           git config user.email "bot@agent-dashboard.auto"
           git add public/index.html scripts/improvement-history.json
           git commit -m "chore(ui): daily auto-update $(date +%Y-%m-%d)"
+          git pull --rebase
           git push
