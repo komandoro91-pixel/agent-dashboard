@@ -1345,6 +1345,9 @@ function applyState(newState) {
   firstSessionStartedAt = active ? active.started_at : null;
 
   currentState = newState;
+  renderSessions(currentState);
+  renderKanban();
+  renderMetrics();
 
   // Update genie label with project name from first session's cwd
   const firstSession = newState.sessions[0];
@@ -1456,7 +1459,7 @@ function renderSessions(state) {
 function renderTimeline() {
   const body = document.getElementById('timelineBody');
 
-  const displayEvents = allEvents.slice().reverse().slice(0, 150);
+  const displayEvents = allEvents.slice(-50).reverse();
 
   body.innerHTML = displayEvents.map(e => {
     let badgeCls = 'tb-tool';
@@ -1528,15 +1531,17 @@ async function fetchState() {
 
 async function fetchEvents() {
   try {
-    const res = await fetch('/api/events?since=' + lastEventTs + '&limit=200');
+    const res = await fetch('/api/events?since=' + lastEventTs + '&limit=50');
     if (!res.ok) return;
-    const events = await res.json();
+    const events = await res.json(); // newest-first from API
     if (events.length > 0) {
-      for (const ev of events) {
+      // Reverse to chronological order before appending
+      const ordered = events.slice().reverse();
+      for (const ev of ordered) {
         allEvents.push(ev);
         if (ev.ts > lastEventTs) lastEventTs = ev.ts;
       }
-      if (allEvents.length > 2000) allEvents = allEvents.slice(-2000);
+      if (allEvents.length > 1000) allEvents = allEvents.slice(-1000);
       renderTimeline();
       renderMetrics();
     }
