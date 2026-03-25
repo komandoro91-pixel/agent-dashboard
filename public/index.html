@@ -119,6 +119,11 @@ header{
 .metric-card::after{
   content:'';position:absolute;top:0;left:0;right:0;height:1px;
   background:linear-gradient(90deg,transparent,var(--bH),transparent);opacity:.6;
+  animation:shimmer 3s ease-in-out infinite;
+}
+@keyframes shimmer{
+  0%,100%{opacity:.3;transform:scaleX(.6)}
+  50%{opacity:.8;transform:scaleX(1)}
 }
 .metric-icon{font-size:16px;margin-bottom:10px;display:block}
 .metric-value{
