@@ -516,6 +516,7 @@ let allEvents           = [];   // raw events accumulator
 let penguinMap          = {};   // agentKey -> { group, stationIdx, labelEl, pointLight }
 let genieMap            = {};   // sessionId -> { group, slotIdx, labelEl }
 let stationColorMap     = {};   // stationIdx -> hexColor string
+let stationScrollOffset = {};   // stationIdx -> float scroll offset for ticker
 let freeStations        = [0, 1, 2, 3, 4, 5];
 let freeGenieSlots      = [0, 1, 2];
 let firstSessionStartedAt = null;
@@ -930,6 +931,26 @@ function drawConsoles(g) {
       g.beginPath(); g.arc(-CW/2+8+d*6, CH/2-5, 1.5, 0, Math.PI*2);
       g.fillStyle = dotColors[d]; g.fill();
     }
+    // Scrolling ticker for WIP stations
+    if (stationScrollOffset[i] !== undefined) {
+      const ticker = '> exec... \u2588 read... \u2588 build... \u2588 write... \u2588 ';
+      g.font = '6px monospace';
+      const tickerW = g.measureText(ticker).width;
+      const sx = -CW/2+6, sy = -CH/2+5, sw = CW-12, sh = CH-12;
+      g.save();
+      g.beginPath(); rrPath(g, sx, sy, sw, sh, 2); g.clip();
+      g.fillStyle = agColor + 'd9';
+      g.textAlign = 'left';
+      g.textBaseline = 'middle';
+      const offset = stationScrollOffset[i] % tickerW;
+      let tx = sx - offset;
+      while (tx < sx + sw) {
+        g.fillText(ticker, tx, 0);
+        tx += tickerW;
+      }
+      g.restore();
+    }
+
     const labels = ['CMD','NAV','ENG','OPS','SCI','COM'];
     g.fillStyle = 'rgba(10,30,60,0.85)'; g.font = 'bold 6px Courier New'; g.textAlign = 'center';
     g.fillText(labels[i] || 'SYS', 0, CH/2-4);
@@ -1174,7 +1195,7 @@ function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase) {
   const shadowMesh=new THREE.Mesh(new THREE.CircleGeometry(base*.85,16),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.28}));
   shadowMesh.position.set(0,0,-base*.05); shadowMesh.scale.set(1,.4,1); group.add(shadowMesh);
 
-  group.rotation.z = -(faceAngle + Math.PI/2);
+  group.rotation.z = 3*Math.PI/2 - faceAngle;
   group.position.set(threeX, threeY, 0);
   group.userData.phase=phase; group.userData.canvasY=canvasY; group.userData.baseScale=pscale;
   return group;
@@ -1338,6 +1359,7 @@ function despawnPenguin(agentKey) {
   freeStations.sort((a, b) => a - b);
 
   delete stationColorMap[entry.stationIdx];
+  delete stationScrollOffset[entry.stationIdx];
   bgDirty = true;
 
   labelEls = labelEls.filter(item => item.agentKey !== agentKey);
@@ -1678,6 +1700,12 @@ function loop() {
   holoRing.rotation  += holoRing.rotSpeed;
   holoRing.pulsePhase += holoRing.pulseSpeed;
   for (const cp of consolePulse) cp.phase += cp.speed;
+
+  // Advance scroll offsets for WIP stations
+  for (const entry of Object.values(penguinMap)) {
+    const idx = entry.stationIdx;
+    stationScrollOffset[idx] = (stationScrollOffset[idx] || 0) + 0.4;
+  }
 
   draw2D();
   animate3D();
