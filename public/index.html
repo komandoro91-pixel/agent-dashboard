@@ -1084,7 +1084,7 @@ function hexColor(hex){ return new THREE.Color(parseInt(hex.replace('#',''),16))
 
 function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase) {
   const group = new THREE.Group();
-  const threeX = canvasX, threeY = GH - canvasY;
+  const threeX = canvasX, threeY = canvasY;
   const pscale = perspScale(canvasY);
   const base = 18 * pscale;
 
@@ -1178,7 +1178,7 @@ function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase) {
 // ─────────────────────────────────────────────────────────
 function makeGenie(canvasX, canvasY) {
   const group = new THREE.Group();
-  const threeX=canvasX, threeY=GH-canvasY;
+  const threeX=canvasX, threeY=canvasY;
   const pscale=perspScale(canvasY)*.858;
   const base=18*pscale;
   const genieColor=new THREE.Color(0x818cf8);
@@ -1246,14 +1246,14 @@ function updateLabels() {
   for (const item of labelEls) {
     if (item.genie) {
       item.el.style.left = (GENIE_POS.x * sx) + 'px';
-      item.el.style.top  = ((GH - GENIE_POS.y - 46) * sy) + 'px';
+      item.el.style.top  = ((GENIE_POS.y - 46) * sy) + 'px';
       continue;
     }
     const entry = penguinMap[item.agentKey];
     if (!entry) continue;
     const st = stations[entry.stationIdx];
     item.el.style.left = (st.chairX * sx) + 'px';
-    item.el.style.top  = ((GH - st.chairY - 58) * sy) + 'px';
+    item.el.style.top  = ((st.chairY - 58) * sy) + 'px';
   }
 }
 
@@ -1277,7 +1277,7 @@ function spawnPenguin(agentKey, agentType) {
 
   // Point light for this station
   const pl = new THREE.PointLight(parseInt(c.fg.replace('#',''), 16), .8, 140);
-  pl.position.set(st.deskX, GH - st.deskY + 8, 30);
+  pl.position.set(st.deskX, st.deskY, 30);
   scene.add(pl);
 
   // Label
