@@ -514,8 +514,10 @@ function agentColor(role){ return AGENT_COLORS[role]||{bg:'rgba(148,163,184,.15)
 let currentState        = { sessions: [], total_active: 0, server_ts: 0 };
 let allEvents           = [];   // raw events accumulator
 let penguinMap          = {};   // agentKey -> { group, stationIdx, labelEl, pointLight }
+let genieMap            = {};   // sessionId -> { group, slotIdx, labelEl }
 let stationColorMap     = {};   // stationIdx -> hexColor string
 let freeStations        = [0, 1, 2, 3, 4, 5];
+let freeGenieSlots      = [0, 1, 2];
 let firstSessionStartedAt = null;
 
 // ═══════════════════════════════════════════════════════════
@@ -549,6 +551,11 @@ const BEAN_BAGS = [
 ];
 
 const GENIE_POS = {x: CX, y: CY - 10};
+const GENIE_SLOTS = [
+  {x: CX,       y: CY - 10},
+  {x: CX - 175, y: CY - 10},
+  {x: CX + 175, y: CY - 10},
+];
 
 // ── Layout / Resize ──────────────────────────────────────
 const officeArea  = document.getElementById('office-area');
@@ -1219,34 +1226,20 @@ function makeGenie(canvasX, canvasY) {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  GENIE — always present
-// ═══════════════════════════════════════════════════════════
-const genie = makeGenie(GENIE_POS.x, GENIE_POS.y);
-scene.add(genie);
-
-// ═══════════════════════════════════════════════════════════
 //  LABELS
 // ═══════════════════════════════════════════════════════════
 const labelsDiv = document.getElementById('labels');
-let labelEls = []; // [{el, agentKey?} | {el, genie: true}]
-
-// Genie label — always present
-const genieEl = document.createElement('div');
-genieEl.className = 'role-label genie';
-genieEl.textContent = (()=>{
-  const s=currentState.sessions[0];
-  if(!s||!s.cwd) return 'workspace';
-  return s.cwd.split(/[\\/]/).filter(Boolean).pop()||'workspace';
-})();
-labelsDiv.appendChild(genieEl);
-labelEls.push({el: genieEl, genie: true});
+let labelEls = []; // [{el, agentKey?} | {el, genieKey?}]
 
 function updateLabels() {
   const sx = scaleRatio, sy = scaleRatio;
   for (const item of labelEls) {
-    if (item.genie) {
-      item.el.style.left = (GENIE_POS.x * sx) + 'px';
-      item.el.style.top  = ((GENIE_POS.y - 46) * sy) + 'px';
+    if (item.genieKey) {
+      const ge = genieMap[item.genieKey];
+      if (!ge) continue;
+      const pos = GENIE_SLOTS[ge.slotIdx];
+      item.el.style.left = (pos.x * sx) + 'px';
+      item.el.style.top  = ((pos.y - 46) * sy) + 'px';
       continue;
     }
     const entry = penguinMap[item.agentKey];
@@ -1255,6 +1248,36 @@ function updateLabels() {
     item.el.style.left = (st.chairX * sx) + 'px';
     item.el.style.top  = ((st.chairY - 58) * sy) + 'px';
   }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SPAWN / DESPAWN GENIES
+// ═══════════════════════════════════════════════════════════
+function spawnGenie(sessionId, session) {
+  if (genieMap[sessionId]) return;
+  if (freeGenieSlots.length === 0) return;
+  const slotIdx = freeGenieSlots.shift();
+  const pos = GENIE_SLOTS[slotIdx];
+  const group = makeGenie(pos.x, pos.y);
+  scene.add(group);
+  const projectName = (session.cwd || '').split(/[\\/]/).filter(Boolean).pop() || 'workspace';
+  const el = document.createElement('div');
+  el.className = 'role-label genie';
+  el.textContent = projectName;
+  labelsDiv.appendChild(el);
+  labelEls.push({el, genieKey: sessionId});
+  genieMap[sessionId] = { group, slotIdx, labelEl: el };
+}
+
+function despawnGenie(sessionId) {
+  const entry = genieMap[sessionId];
+  if (!entry) return;
+  scene.remove(entry.group);
+  entry.labelEl.remove();
+  labelEls = labelEls.filter(item => item.genieKey !== sessionId);
+  freeGenieSlots.push(entry.slotIdx);
+  freeGenieSlots.sort((a, b) => a - b);
+  delete genieMap[sessionId];
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1317,40 +1340,32 @@ function despawnPenguin(agentKey) {
 //  APPLY STATE
 // ═══════════════════════════════════════════════════════════
 function applyState(newState) {
-  // Collect all visible session keys
-  const newKeys = new Set();
-  for (const session of newState.sessions) {
-    newKeys.add(session.session_id);
+  // Genies: 1 per session
+  const newSessionKeys = new Set((newState.sessions || []).map(s => s.session_id));
+  for (const key of Object.keys(genieMap)) {
+    if (!newSessionKeys.has(key)) despawnGenie(key);
+  }
+  for (const session of (newState.sessions || [])) {
+    spawnGenie(session.session_id, session);
   }
 
-  // Despawn gone sessions
+  // Penguins: 1 per active subagent
+  const newPenguinKeys = new Set((newState.active_penguins || []).map(p => p.key));
   for (const key of Object.keys(penguinMap)) {
-    if (!newKeys.has(key)) despawnPenguin(key);
+    if (!newPenguinKeys.has(key)) despawnPenguin(key);
   }
-
-  // Spawn new sessions as penguins
-  for (const session of newState.sessions) {
-    if (!penguinMap[session.session_id]) {
-      const role = session.session_type === 'vscode' ? 'researcher' : 'general-purpose';
-      spawnPenguin(session.session_id, role);
-    }
+  for (const penguin of (newState.active_penguins || [])) {
+    if (!penguinMap[penguin.key]) spawnPenguin(penguin.key, penguin.agent_type || 'general-purpose');
   }
 
   // Track first active session started_at
-  const active = newState.sessions.find(s => s.status === 'active');
+  const active = (newState.sessions || []).find(s => s.status === 'active');
   firstSessionStartedAt = active ? active.started_at : null;
 
   currentState = newState;
   renderSessions(currentState);
   renderKanban();
   renderMetrics();
-
-  // Update genie label with project name from first session's cwd
-  const firstSession = newState.sessions[0];
-  if (firstSession && firstSession.cwd) {
-    const projectName = firstSession.cwd.split(/[\\/]/).filter(Boolean).pop() || 'workspace';
-    genieEl.textContent = projectName;
-  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1627,16 +1642,19 @@ function animate3D() {
       }
     }
   }
-  // Genie float + rotate + pulse
+  // Genies float + rotate + pulse
   const floatZ = Math.sin(t * .72) * 8.5;
-  genie.position.z = floatZ;
-  genie.position.y = genie.userData.baseY + Math.sin(t * .48) * 3.5;
-  genie.rotation.z += .008;
   const pulse = .92 + Math.sin(t * 1.8) * .14;
-  genie.userData.orb.scale.setScalar(pulse);
-  genie.userData.core.material.emissiveIntensity = .40 + Math.sin(t * 2.2) * .22;
-  const gl = genie.children.find(c => c.isLight);
-  if (gl) gl.intensity = 1.2 + Math.sin(t * 1.9) * .35;
+  for (const ge of Object.values(genieMap)) {
+    const g = ge.group;
+    g.position.z = floatZ;
+    g.position.y = g.userData.baseY + Math.sin(t * .48) * 3.5;
+    g.rotation.z += .008;
+    if (g.userData.orb) g.userData.orb.scale.setScalar(pulse);
+    if (g.userData.core) g.userData.core.material.emissiveIntensity = .40 + Math.sin(t * 2.2) * .22;
+    const gl = g.children.find(c => c.isLight);
+    if (gl) gl.intensity = 1.2 + Math.sin(t * 1.9) * .35;
+  }
 }
 
 function loop() {

@@ -274,3 +274,58 @@ describe('total_active count', () => {
     expect(result.total_active).toBe(2);
   });
 });
+
+// ---------------------------------------------------------------------------
+// 8. active_penguins — flat list of active subagents across all sessions
+// ---------------------------------------------------------------------------
+
+describe('active_penguins', () => {
+  it('response always has active_penguins array', () => {
+    const result = computeState([], 0);
+    expect(Array.isArray(result.active_penguins)).toBe(true);
+  });
+
+  it('agent started < 60s ago appears in active_penguins', () => {
+    const base = now();
+    const events = [
+      { ts: base - 10, session_id: 's1', phase: 'session_start', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 5,  session_id: 's1', phase: 'start', tool: 'Agent', is_agent: true, agent_type: 'developer', detail: 'fix bug', cwd: '/proj', session_type: 'vscode' },
+    ];
+    const result = computeState(events, 0);
+    expect(result.active_penguins.length).toBe(1);
+    expect(result.active_penguins[0].agent_type).toBe('developer');
+  });
+
+  it('agent started > 60s ago (TTL expired) is NOT in active_penguins', () => {
+    const base = now();
+    const events = [
+      { ts: base - 120, session_id: 's1', phase: 'session_start', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 61,  session_id: 's1', phase: 'start', tool: 'Agent', is_agent: true, agent_type: 'researcher', detail: 'old task', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 2,   session_id: 's1', phase: 'start', tool: 'Bash', cwd: '/proj', session_type: 'vscode' },
+    ];
+    const result = computeState(events, 0);
+    expect(result.active_penguins.length).toBe(0);
+  });
+
+  it('completed agent (phase=end) is not in active_penguins', () => {
+    const base = now();
+    const events = [
+      { ts: base - 20, session_id: 's1', phase: 'session_start', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 15, session_id: 's1', phase: 'start', tool: 'Agent', is_agent: true, agent_type: 'tester', detail: 'run tests', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 5,  session_id: 's1', phase: 'end',   tool: 'Agent', is_agent: true, agent_type: 'tester', cwd: '/proj', session_type: 'vscode' },
+    ];
+    const result = computeState(events, 0);
+    expect(result.active_penguins.length).toBe(0);
+  });
+
+  it('two concurrent agents → two penguins', () => {
+    const base = now();
+    const events = [
+      { ts: base - 20, session_id: 's1', phase: 'session_start', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 15, session_id: 's1', phase: 'start', tool: 'Agent', is_agent: true, agent_type: 'developer', detail: 'feat A', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 10, session_id: 's1', phase: 'start', tool: 'Agent', is_agent: true, agent_type: 'tester',    detail: 'test A', cwd: '/proj', session_type: 'vscode' },
+    ];
+    const result = computeState(events, 0);
+    expect(result.active_penguins.length).toBe(2);
+  });
+});

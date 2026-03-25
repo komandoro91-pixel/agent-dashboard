@@ -1,6 +1,7 @@
 const { Redis } = require('@upstash/redis');
 
 function computeState(events, startTs) {
+  const now = Date.now() / 1000;
   const sessions = {};
   const pending = {};
   const completed = {};
@@ -69,8 +70,9 @@ function computeState(events, startTs) {
     }
   }
 
+  const AGENT_TTL_SEC = 60;
   for (const [sid, sess] of Object.entries(sessions)) {
-    sess.active_agents = [...(pending[sid] || [])];
+    sess.active_agents = (pending[sid] || []).filter(ag => now - ag.started_at < AGENT_TTL_SEC);
     sess.completed_agents = (completed[sid] || []).slice(-20);
   }
 
@@ -97,7 +99,6 @@ function computeState(events, startTs) {
     }
   }
 
-  const now = Date.now() / 1000;
   const visible = Object.values(sessions).filter(
     s => s.status !== 'ended' && now - s.last_event_ts < 300
   );
@@ -105,7 +106,8 @@ function computeState(events, startTs) {
     s => s.status === 'active' || s.active_agents.length > 0
   ).length;
 
-  return { sessions: visible, total_active, server_ts: now };
+  const active_penguins = visible.flatMap(s => s.active_agents);
+  return { sessions: visible, active_penguins, total_active, server_ts: now };
 }
 
 module.exports = async function handler(req, res) {
