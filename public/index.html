@@ -681,15 +681,17 @@ for (let i = 0; i < NUM_DESKS; i++) {
   const dirX = Math.cos(a), dirY = Math.sin(a);
   const deskX = CX + dirX * DESK_RADIUS;
   const deskY = CY + dirY * DESK_RADIUS;
-  // Monitor height is aligned radially — outward half-extent is always CH/2=16.
-  // Place label 6px beyond the outward edge: DESK_RADIUS + 16 + 6 = DESK_RADIUS + 22.
+  // bbHalfY = half-height of the rotated monitor bounding box in canvas Y.
+  // Label sits 6px above the monitor's topmost canvas-Y edge, centered at deskX.
+  const monAngle = Math.atan2(CY - deskY, CX - deskX) + Math.PI / 2;
+  const bbHalfY = 26 * Math.abs(Math.sin(monAngle)) + 16 * Math.abs(Math.cos(monAngle));
   stations.push({
     id: i, angle: a, dirX, dirY,
     deskX, deskY,
     chairX: CX + dirX * (DESK_RADIUS - 38),
     chairY: CY + dirY * (DESK_RADIUS - 38),
-    labelX: CX + dirX * (DESK_RADIUS + 22),
-    labelY: CY + dirY * (DESK_RADIUS + 22),
+    labelX: deskX,
+    labelY: deskY - bbHalfY - 6,
   });
 }
 
