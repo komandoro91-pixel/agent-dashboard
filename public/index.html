@@ -679,12 +679,19 @@ const stations = [];
 for (let i = 0; i < NUM_DESKS; i++) {
   const a = (i * (360 / NUM_DESKS) - 90) * Math.PI / 180;
   const dirX = Math.cos(a), dirY = Math.sin(a);
+  const deskX = CX + dirX * DESK_RADIUS;
+  const deskY = CY + dirY * DESK_RADIUS;
+  // Monitor is drawn at (deskX, deskY) rotated by monAngle.
+  // bbHalfY = half-height of the rotated monitor bounding box in canvas Y.
+  const monAngle = Math.atan2(CY - deskY, CX - deskX) + Math.PI / 2;
+  const bbHalfY = 26 * Math.abs(Math.sin(monAngle)) + 16 * Math.abs(Math.cos(monAngle));
   stations.push({
     id: i, angle: a, dirX, dirY,
-    deskX:  CX + dirX * DESK_RADIUS,
-    deskY:  CY + dirY * DESK_RADIUS,
+    deskX, deskY,
     chairX: CX + dirX * (DESK_RADIUS - 38),
     chairY: CY + dirY * (DESK_RADIUS - 38),
+    labelX: deskX,
+    labelY: deskY - bbHalfY - 6,
   });
 }
 
@@ -1417,8 +1424,8 @@ function updateLabels() {
     const entry = penguinMap[item.agentKey];
     if (!entry) continue;
     const st = stations[entry.stationIdx];
-    item.el.style.left = (st.chairX * sx) + 'px';
-    item.el.style.top  = ((st.chairY - 58) * sy) + 'px';
+    item.el.style.left = (st.labelX * sx) + 'px';
+    item.el.style.top  = (st.labelY * sy) + 'px';
   }
 }
 
