@@ -117,9 +117,21 @@ header{
 }
 .metric-card:hover{border-color:var(--bH)}
 .metric-card::after{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,transparent,var(--bH),transparent);opacity:.6;
   animation:shimmer 3s ease-in-out infinite;
+}
+.metric-card:nth-child(1)::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--green),var(--cyan));border-radius:var(--r) var(--r) 0 0;
+}
+.metric-card:nth-child(2)::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--indigo),var(--purple));border-radius:var(--r) var(--r) 0 0;
+}
+.metric-card:nth-child(3)::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--amber),#f97316);border-radius:var(--r) var(--r) 0 0;
 }
 @keyframes shimmer{
   0%,100%{opacity:.3;transform:scaleX(.6)}
