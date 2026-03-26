@@ -582,9 +582,9 @@ const BEAN_BAGS = [
 
 const GENIE_POS = {x: CX, y: CY - 10};
 const GENIE_SLOTS = [
-  {x: CX,       y: CY - 10},
-  {x: CX - 175, y: CY - 10},
-  {x: CX + 175, y: CY - 10},
+  {x: CX,       y: CY - 28},
+  {x: CX - 34,  y: CY + 18},
+  {x: CX + 34,  y: CY + 18},
 ];
 
 // ── Layout / Resize ──────────────────────────────────────
@@ -1489,7 +1489,7 @@ function renderSessions(state) {
   const container = document.getElementById('sessionsContainer');
   const countEl   = document.getElementById('sessionCount');
 
-  countEl.textContent = state.sessions.length + ' active';
+  countEl.textContent = Object.keys(genieMap).length + ' active';
 
   if (state.sessions.length === 0) {
     container.innerHTML = '<div class="empty-strip">Waiting for sessions...</div>';
