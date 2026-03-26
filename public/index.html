@@ -1672,16 +1672,24 @@ function draw2D() {
 function drawGenieOrbitCards(g) {
   const ORBIT_R = 96;
   const CARD_W = 94, CARD_H = 24;
+  const DECO_TEXTS = ['standby', 'ready', 'idle'];
 
   for (const [sid, ge] of Object.entries(genieMap)) {
     const agents = ge.activeAgents || [];
-    if (agents.length === 0) continue;
+    const hasAgents = agents.length > 0;
+    const projectName = ge.sessionData ? (ge.sessionData.cwd || '').split(/[\\/]/).filter(Boolean).pop() || 'workspace' : 'workspace';
+
+    // Items to draw: real agents when active, else 3 decorative placeholders
+    const items = hasAgents
+      ? agents.slice(0, 5).map(ag => ({ text: ag.description ? `${ag.agent_type}  ${ag.description}` : ag.agent_type, real: true }))
+      : DECO_TEXTS.map((t, i) => ({ text: i === 0 ? projectName : t, real: false }));
 
     const pos = GENIE_SLOTS[ge.slotIdx];
     const angles = genieOrbitAngles[sid] || [];
 
+    // Orbit ring — brighter when agents active
     g.save();
-    g.strokeStyle = 'rgba(129,140,248,0.13)';
+    g.strokeStyle = hasAgents ? 'rgba(129,140,248,0.28)' : 'rgba(129,140,248,0.10)';
     g.lineWidth = 1;
     g.setLineDash([3, 7]);
     g.beginPath();
@@ -1690,64 +1698,67 @@ function drawGenieOrbitCards(g) {
     g.setLineDash([]);
     g.restore();
 
-    for (let i = 0; i < agents.length; i++) {
-      const ag = agents[i];
-      const angle = angles[i] !== undefined ? angles[i] : 0;
+    if (!ge.cardScrollOffset) ge.cardScrollOffset = {};
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const angle = angles[i] !== undefined ? angles[i] : (i * Math.PI * 2 / items.length);
       const cx = pos.x + Math.cos(angle) * ORBIT_R;
       const cy = pos.y + Math.sin(angle) * ORBIT_R;
 
+      // Line to genie center
       g.save();
       g.beginPath();
       g.moveTo(cx, cy);
       const dx = pos.x - cx, dy = pos.y - cy;
       const len = Math.sqrt(dx*dx + dy*dy);
       g.lineTo(cx + dx * (len - 20) / len, cy + dy * (len - 20) / len);
-      g.strokeStyle = 'rgba(129,140,248,0.20)';
+      g.strokeStyle = hasAgents ? 'rgba(129,140,248,0.22)' : 'rgba(129,140,248,0.08)';
       g.lineWidth = 0.7;
       g.stroke();
       g.restore();
 
+      // Glow
+      const glowAlpha = hasAgents ? 0.18 : 0.07;
       const glow = g.createRadialGradient(cx, cy, 0, cx, cy, 50);
-      glow.addColorStop(0, 'rgba(129,140,248,0.18)');
+      glow.addColorStop(0, `rgba(129,140,248,${glowAlpha})`);
       glow.addColorStop(1, 'rgba(0,0,0,0)');
       g.fillStyle = glow;
       g.fillRect(cx - 50, cy - 50, 100, 100);
 
+      // Card
       g.save();
       g.translate(cx - CARD_W / 2, cy - CARD_H / 2);
       g.beginPath();
       rrPath(g, 0, 0, CARD_W, CARD_H, 7);
-      g.fillStyle = 'rgba(8,12,28,0.92)';
+      g.fillStyle = hasAgents ? 'rgba(8,12,28,0.92)' : 'rgba(8,12,28,0.60)';
       g.fill();
-      g.strokeStyle = 'rgba(129,140,248,0.75)';
+      g.strokeStyle = hasAgents ? 'rgba(129,140,248,0.75)' : 'rgba(129,140,248,0.28)';
       g.lineWidth = 1;
       g.stroke();
 
-      g.fillStyle = '#818cf8';
+      // Left accent stripe
+      g.fillStyle = hasAgents ? '#818cf8' : 'rgba(129,140,248,0.35)';
       g.beginPath();
       rrPath(g, 0, 0, 3, CARD_H, 2);
       g.fill();
 
+      // Scrolling text
       g.save();
       g.beginPath();
       rrPath(g, 5, 3, CARD_W - 10, CARD_H - 6, 3);
       g.clip();
 
-      const type = (ag.agent_type || 'agent');
-      const desc = ag.description || '';
-      const fullText = desc ? `${type}  ${desc}` : type;
-
-      if (!ge.cardScrollOffset) ge.cardScrollOffset = {};
-      if (ge.cardScrollOffset[i] === undefined) ge.cardScrollOffset[i] = 0;
-      ge.cardScrollOffset[i] += 0.55;
+      if (ge.cardScrollOffset[i] === undefined) ge.cardScrollOffset[i] = i * 20;
+      ge.cardScrollOffset[i] += hasAgents ? 0.55 : 0.25;
 
       g.font = "bold 8px 'SF Mono', monospace";
-      const textW = g.measureText(fullText).width;
+      const textW = g.measureText(item.text).width;
       const maxScroll = textW + 40;
       const scrollX = 5 - (ge.cardScrollOffset[i] % maxScroll);
 
-      g.fillStyle = '#a5b4fc';
-      g.fillText(fullText, scrollX, CARD_H - 8);
+      g.fillStyle = hasAgents ? '#a5b4fc' : 'rgba(129,140,248,0.45)';
+      g.fillText(item.text, scrollX, CARD_H - 8);
       g.restore();
 
       g.restore();
@@ -1876,14 +1887,15 @@ function loop() {
   const now = Date.now() / 1000;
   for (const [sid, ge] of Object.entries(genieMap)) {
     const agents = ge.activeAgents || [];
+    const count = Math.max(agents.length, 3); // минимум 3 декоративных
     if (!genieOrbitAngles[sid]) {
-      genieOrbitAngles[sid] = agents.map((_, i) => i * (Math.PI * 2 / Math.max(agents.length, 1)));
+      genieOrbitAngles[sid] = Array.from({length: count}, (_, i) => i * (Math.PI * 2 / count));
     }
-    while (genieOrbitAngles[sid].length < agents.length) {
+    while (genieOrbitAngles[sid].length < count) {
       genieOrbitAngles[sid].push(Math.random() * Math.PI * 2);
     }
-    genieOrbitAngles[sid].length = agents.length;
-    const speeds = [0.013, 0.010, 0.008];
+    genieOrbitAngles[sid].length = count;
+    const speeds = [0.013, 0.010, 0.008, 0.011, 0.009];
     for (let i = 0; i < genieOrbitAngles[sid].length; i++) {
       genieOrbitAngles[sid][i] += speeds[i] || 0.010;
     }
