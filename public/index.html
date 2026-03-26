@@ -691,7 +691,7 @@ for (let i = 0; i < NUM_DESKS; i++) {
     chairX: CX + dirX * (DESK_RADIUS - 38),
     chairY: CY + dirY * (DESK_RADIUS - 38),
     labelX: deskX,
-    labelY: deskY - bbHalfY - 6,
+    labelY: Math.min(deskY - bbHalfY - 6, CY + dirY * (DESK_RADIUS - 38) - 10),
   });
 }
 
