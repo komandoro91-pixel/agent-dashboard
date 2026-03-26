@@ -1670,28 +1670,55 @@ function draw2D() {
 }
 
 function drawGenieOrbitCards(g) {
-  const ORBIT_R = 96;
-  const CARD_W = 94, CARD_H = 24;
-  const DECO_TEXTS = ['standby', 'ready', 'idle'];
+  const ORBIT_R = 88;
+  // Decorative pill: small; agent card: slightly wider for description
+  const PILL_W = 56, PILL_H = 14;
+  const AGENT_W = 80, AGENT_H = 16;
+
+  // Decorative color: amber-lime; agent color: bright lime
+  const DECO_BORDER  = 'rgba(251,191,36,0.55)';
+  const DECO_BG      = 'rgba(10,12,8,0.70)';
+  const DECO_DOT     = '#f59e0b';
+  const DECO_TEXT    = 'rgba(251,191,36,0.85)';
+  const AGENT_BORDER = 'rgba(74,222,128,0.80)';
+  const AGENT_BG     = 'rgba(4,12,8,0.90)';
+  const AGENT_DOT    = '#4ade80';
+  const AGENT_TEXT   = '#86efac';
 
   for (const [sid, ge] of Object.entries(genieMap)) {
     const agents = ge.activeAgents || [];
     const hasAgents = agents.length > 0;
-    const projectName = ge.sessionData ? (ge.sessionData.cwd || '').split(/[\\/]/).filter(Boolean).pop() || 'workspace' : 'workspace';
 
-    // Items to draw: real agents when active, else 3 decorative placeholders
+    // Project name: use cwd basename, fallback to 'workspace'
+    const cwdParts = (ge.sessionData?.cwd || '').split(/[\\/]/).filter(Boolean);
+    let projectName = cwdParts.pop() || 'workspace';
+    if (projectName.toLowerCase() === 'vs + claude projects') projectName = 'workspace';
+    if (projectName.length > 14) projectName = projectName.slice(0, 13) + '…';
+
     const items = hasAgents
-      ? agents.slice(0, 5).map(ag => ({ text: ag.description ? `${ag.agent_type}  ${ag.description}` : ag.agent_type, real: true }))
-      : DECO_TEXTS.map((t, i) => ({ text: i === 0 ? projectName : t, real: false }));
+      ? agents.slice(0, 4).map(ag => {
+          const type = (ag.agent_type || 'agent').replace(/-/g, ' ');
+          const desc = ag.description || '';
+          return { text: desc ? `${type}: ${desc}` : type, scrolling: desc.length > 8 };
+        })
+      : Array.from({ length: 3 }, () => ({ text: projectName, scrolling: false }));
+
+    const CARD_W = hasAgents ? AGENT_W : PILL_W;
+    const CARD_H = hasAgents ? AGENT_H : PILL_H;
+    const border = hasAgents ? AGENT_BORDER : DECO_BORDER;
+    const bg     = hasAgents ? AGENT_BG     : DECO_BG;
+    const dot    = hasAgents ? AGENT_DOT    : DECO_DOT;
+    const textC  = hasAgents ? AGENT_TEXT   : DECO_TEXT;
+    const glowC  = hasAgents ? '74,222,128' : '251,191,36';
 
     const pos = GENIE_SLOTS[ge.slotIdx];
     const angles = genieOrbitAngles[sid] || [];
 
-    // Orbit ring — brighter when agents active
+    // Orbit ring
     g.save();
-    g.strokeStyle = hasAgents ? 'rgba(129,140,248,0.28)' : 'rgba(129,140,248,0.10)';
-    g.lineWidth = 1;
-    g.setLineDash([3, 7]);
+    g.strokeStyle = hasAgents ? 'rgba(74,222,128,0.20)' : 'rgba(251,191,36,0.12)';
+    g.lineWidth = 0.8;
+    g.setLineDash([2, 8]);
     g.beginPath();
     g.arc(pos.x, pos.y, ORBIT_R, 0, Math.PI * 2);
     g.stroke();
@@ -1706,59 +1733,65 @@ function drawGenieOrbitCards(g) {
       const cx = pos.x + Math.cos(angle) * ORBIT_R;
       const cy = pos.y + Math.sin(angle) * ORBIT_R;
 
-      // Line to genie center
+      // Connector line
       g.save();
       g.beginPath();
-      g.moveTo(cx, cy);
       const dx = pos.x - cx, dy = pos.y - cy;
       const len = Math.sqrt(dx*dx + dy*dy);
-      g.lineTo(cx + dx * (len - 20) / len, cy + dy * (len - 20) / len);
-      g.strokeStyle = hasAgents ? 'rgba(129,140,248,0.22)' : 'rgba(129,140,248,0.08)';
-      g.lineWidth = 0.7;
+      g.moveTo(cx, cy);
+      g.lineTo(cx + dx * (len - 18) / len, cy + dy * (len - 18) / len);
+      g.strokeStyle = hasAgents ? 'rgba(74,222,128,0.15)' : 'rgba(251,191,36,0.10)';
+      g.lineWidth = 0.6;
       g.stroke();
       g.restore();
 
-      // Glow
-      const glowAlpha = hasAgents ? 0.18 : 0.07;
-      const glow = g.createRadialGradient(cx, cy, 0, cx, cy, 50);
-      glow.addColorStop(0, `rgba(129,140,248,${glowAlpha})`);
-      glow.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = glow;
-      g.fillRect(cx - 50, cy - 50, 100, 100);
+      // Glow halo
+      const gw = g.createRadialGradient(cx, cy, 0, cx, cy, 36);
+      gw.addColorStop(0, `rgba(${glowC},${hasAgents ? 0.16 : 0.08})`);
+      gw.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = gw;
+      g.fillRect(cx - 36, cy - 36, 72, 72);
 
-      // Card
+      // Pill / card body
       g.save();
       g.translate(cx - CARD_W / 2, cy - CARD_H / 2);
+
       g.beginPath();
-      rrPath(g, 0, 0, CARD_W, CARD_H, 7);
-      g.fillStyle = hasAgents ? 'rgba(8,12,28,0.92)' : 'rgba(8,12,28,0.60)';
+      rrPath(g, 0, 0, CARD_W, CARD_H, CARD_H / 2);
+      g.fillStyle = bg;
       g.fill();
-      g.strokeStyle = hasAgents ? 'rgba(129,140,248,0.75)' : 'rgba(129,140,248,0.28)';
-      g.lineWidth = 1;
+      g.strokeStyle = border;
+      g.lineWidth = 0.9;
       g.stroke();
 
-      // Left accent stripe
-      g.fillStyle = hasAgents ? '#818cf8' : 'rgba(129,140,248,0.35)';
+      // Dot indicator (left side)
+      g.fillStyle = dot;
       g.beginPath();
-      rrPath(g, 0, 0, 3, CARD_H, 2);
+      g.arc(7, CARD_H / 2, 2.5, 0, Math.PI * 2);
       g.fill();
 
-      // Scrolling text
+      // Text (scrolling for long agent descriptions, static for project name)
       g.save();
       g.beginPath();
-      rrPath(g, 5, 3, CARD_W - 10, CARD_H - 6, 3);
+      rrPath(g, 12, 2, CARD_W - 16, CARD_H - 4, (CARD_H - 4) / 2);
       g.clip();
 
-      if (ge.cardScrollOffset[i] === undefined) ge.cardScrollOffset[i] = i * 20;
-      ge.cardScrollOffset[i] += hasAgents ? 0.55 : 0.25;
+      if (ge.cardScrollOffset[i] === undefined) ge.cardScrollOffset[i] = i * 18;
 
-      g.font = "bold 8px 'SF Mono', monospace";
+      g.font = `bold 7px 'SF Mono', monospace`;
       const textW = g.measureText(item.text).width;
-      const maxScroll = textW + 40;
-      const scrollX = 5 - (ge.cardScrollOffset[i] % maxScroll);
+      const fits = textW <= (CARD_W - 18);
 
-      g.fillStyle = hasAgents ? '#a5b4fc' : 'rgba(129,140,248,0.45)';
-      g.fillText(item.text, scrollX, CARD_H - 8);
+      let tx;
+      if (fits || !item.scrolling) {
+        tx = 12; // static left-aligned (short text or deco)
+      } else {
+        ge.cardScrollOffset[i] += 0.5;
+        tx = 12 - (ge.cardScrollOffset[i] % (textW + 30));
+      }
+
+      g.fillStyle = textC;
+      g.fillText(item.text, tx, CARD_H - 4);
       g.restore();
 
       g.restore();
