@@ -488,6 +488,16 @@ header{
   #timeline-panel.tab-hidden {
     display: none !important;
   }
+
+  #stage {
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+  }
+  #canvas-wrap {
+    position: relative;
+  }
+  #kanban-panel { display: none !important; }
 }
 </style>
 </head>
@@ -599,7 +609,7 @@ header{
     </div>
 
     <!-- Timeline panel -->
-    <div id="timeline-panel">
+    <div id="timeline-panel" class="tab-hidden">
       <div class="card-header">
         <span class="card-title">Timeline</span>
         <span style="font-size:10px;color:var(--dim2)" id="tlClock">--:--</span>
@@ -695,7 +705,8 @@ function resize() {
   dpr = window.devicePixelRatio || 1;
   const aw = officeArea.clientWidth;
   const ah = officeArea.clientHeight;
-  scaleRatio = Math.min(aw / GW, ah / GH);
+  const isMobile = window.innerWidth < 768;
+  scaleRatio = isMobile ? Math.max(aw / GW, ah / GH) : Math.min(aw / GW, ah / GH);
 
   cssW = Math.floor(GW * scaleRatio);
   cssH = Math.floor(GH * scaleRatio);
@@ -1413,7 +1424,10 @@ function spawnGenie(sessionId, session) {
   const projectName = (session.cwd || '').split(/[\\/]/).filter(Boolean).pop() || 'workspace';
   const el = document.createElement('div');
   el.className = 'role-label genie';
-  el.textContent = projectName;
+  let displayName = projectName;
+  if (displayName.toLowerCase() === 'vs + claude projects') displayName = 'workspace';
+  if (displayName.length > 14) displayName = displayName.slice(0, 13) + '…';
+  el.textContent = displayName;
   labelsDiv.appendChild(el);
   labelEls.push({el, genieKey: sessionId});
   genieMap[sessionId] = { group, slotIdx, labelEl: el };
@@ -1796,7 +1810,7 @@ function drawGenieOrbitCards(g) {
           const desc = ag.description || '';
           return { text: desc ? `${type}: ${desc}` : type, scrolling: desc.length > 8 };
         })
-      : Array.from({ length: 3 }, () => ({ text: projectName, scrolling: false }));
+      : [{ text: projectName, scrolling: false }];
 
     const CARD_W = hasAgents ? AGENT_W : PILL_W;
     const CARD_H = hasAgents ? AGENT_H : PILL_H;
@@ -2015,7 +2029,7 @@ function loop() {
   const now = Date.now() / 1000;
   for (const [sid, ge] of Object.entries(genieMap)) {
     const agents = ge.activeAgents || [];
-    const count = Math.max(agents.length, 3); // минимум 3 декоративных
+    const count = Math.max(agents.length, 1);
     if (!genieOrbitAngles[sid]) {
       genieOrbitAngles[sid] = Array.from({length: count}, (_, i) => i * (Math.PI * 2 / count));
     }
