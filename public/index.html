@@ -496,8 +496,19 @@ header{
   }
   #canvas-wrap {
     position: relative;
+    flex-shrink: 0;
   }
-  #kanban-panel { display: none !important; }
+  #kanban-panel {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: auto !important;
+    max-height: 130px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
 }
 </style>
 </head>
