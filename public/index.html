@@ -802,12 +802,12 @@ const consolePulse = Array.from({ length: 6 }, () => ({
 
 // ── Room shell ──
 function drawRoom(g) {
-  g.fillStyle = '#020408';
+  g.fillStyle = '#060c16';
   g.fillRect(0, 0, GW, GH);
 
   const floorGrad = g.createLinearGradient(0, 165, 0, GH);
-  floorGrad.addColorStop(0, '#060d1a');
-  floorGrad.addColorStop(1, '#040810');
+  floorGrad.addColorStop(0, '#0d1c38');
+  floorGrad.addColorStop(1, '#0a1626');
   g.fillStyle = floorGrad;
   g.fillRect(50, 165, GW - 100, GH - 165);
 }
@@ -1226,7 +1226,7 @@ const scene = new THREE.Scene();
 scene.rotation.x = -THREE.MathUtils.degToRad(15);
 
 // Lighting
-const ambientLight = new THREE.AmbientLight(0xffd8a0, 0.55);
+const ambientLight = new THREE.AmbientLight(0xffd8a0, 0.78);
 scene.add(ambientLight);
 
 const dirLight = new THREE.DirectionalLight(0xffeedd, 1.2);
@@ -1751,6 +1751,7 @@ async function fetchEvents() {
 //  ANIMATION LOOP
 // ═══════════════════════════════════════════════════════════
 let frame = 0;
+let animStartTime = null, tSec = 0;
 let lastFPSTime = performance.now(), framesSinceFPS = 0;
 const fpsEl   = document.getElementById('fps-counter');
 const clockEl = document.getElementById('clock');
@@ -1920,7 +1921,7 @@ function drawGenieOrbitCards(g) {
 }
 
 function animate3D() {
-  const t = frame * .018;
+  const t = tSec * 1.08;
   for (const entry of Object.values(penguinMap)) {
     const p = entry.group;
     const ph = p.userData.phase || 0;
@@ -2016,8 +2017,10 @@ function animate3D() {
   }
 }
 
-function loop() {
+function loop(timestamp) {
   requestAnimationFrame(loop);
+  if (!animStartTime) animStartTime = timestamp;
+  tSec = (timestamp - animStartTime) / 1000;
   frame++;
 
   // Update space station animation state
