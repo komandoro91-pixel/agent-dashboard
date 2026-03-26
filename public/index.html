@@ -544,6 +544,7 @@ let currentState        = { sessions: [], total_active: 0, server_ts: 0 };
 let allEvents           = [];   // raw events accumulator
 let penguinMap          = {};   // agentKey -> { group, stationIdx, labelEl, pointLight }
 let genieMap            = {};   // sessionId -> { group, slotIdx, labelEl }
+let genieOrbitAngles    = {};   // sessionId -> [angle0, angle1, ...]
 let stationColorMap     = {};   // stationIdx -> hexColor string
 let stationScrollOffset = {};   // stationIdx -> float scroll offset for ticker
 let freeStations        = [0, 1, 2, 3, 4, 5];
@@ -1410,6 +1411,10 @@ function applyState(newState) {
   }
   for (const session of (newState.sessions || [])) {
     spawnGenie(session.session_id, session);
+    if (genieMap[session.session_id]) {
+      genieMap[session.session_id].activeAgents = session.active_agents || [];
+      genieMap[session.session_id].sessionData  = session;
+    }
   }
 
   // Penguins: 1 per active subagent
@@ -1657,10 +1662,97 @@ function draw2D() {
   drawIndicators(g);
   drawConsoles(g);
   drawHoloRing(g);
+  drawGenieOrbitCards(g);
   drawAmbientGlow(g);
   drawVignette(g);
 
   g.restore();
+}
+
+function drawGenieOrbitCards(g) {
+  const ORBIT_R = 96;
+  const CARD_W = 94, CARD_H = 24;
+
+  for (const [sid, ge] of Object.entries(genieMap)) {
+    const agents = ge.activeAgents || [];
+    if (agents.length === 0) continue;
+
+    const pos = GENIE_SLOTS[ge.slotIdx];
+    const angles = genieOrbitAngles[sid] || [];
+
+    g.save();
+    g.strokeStyle = 'rgba(129,140,248,0.13)';
+    g.lineWidth = 1;
+    g.setLineDash([3, 7]);
+    g.beginPath();
+    g.arc(pos.x, pos.y, ORBIT_R, 0, Math.PI * 2);
+    g.stroke();
+    g.setLineDash([]);
+    g.restore();
+
+    for (let i = 0; i < agents.length; i++) {
+      const ag = agents[i];
+      const angle = angles[i] !== undefined ? angles[i] : 0;
+      const cx = pos.x + Math.cos(angle) * ORBIT_R;
+      const cy = pos.y + Math.sin(angle) * ORBIT_R;
+
+      g.save();
+      g.beginPath();
+      g.moveTo(cx, cy);
+      const dx = pos.x - cx, dy = pos.y - cy;
+      const len = Math.sqrt(dx*dx + dy*dy);
+      g.lineTo(cx + dx * (len - 20) / len, cy + dy * (len - 20) / len);
+      g.strokeStyle = 'rgba(129,140,248,0.20)';
+      g.lineWidth = 0.7;
+      g.stroke();
+      g.restore();
+
+      const glow = g.createRadialGradient(cx, cy, 0, cx, cy, 50);
+      glow.addColorStop(0, 'rgba(129,140,248,0.18)');
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = glow;
+      g.fillRect(cx - 50, cy - 50, 100, 100);
+
+      g.save();
+      g.translate(cx - CARD_W / 2, cy - CARD_H / 2);
+      g.beginPath();
+      rrPath(g, 0, 0, CARD_W, CARD_H, 7);
+      g.fillStyle = 'rgba(8,12,28,0.92)';
+      g.fill();
+      g.strokeStyle = 'rgba(129,140,248,0.75)';
+      g.lineWidth = 1;
+      g.stroke();
+
+      g.fillStyle = '#818cf8';
+      g.beginPath();
+      rrPath(g, 0, 0, 3, CARD_H, 2);
+      g.fill();
+
+      g.save();
+      g.beginPath();
+      rrPath(g, 5, 3, CARD_W - 10, CARD_H - 6, 3);
+      g.clip();
+
+      const type = (ag.agent_type || 'agent');
+      const desc = ag.description || '';
+      const fullText = desc ? `${type}  ${desc}` : type;
+
+      if (!ge.cardScrollOffset) ge.cardScrollOffset = {};
+      if (ge.cardScrollOffset[i] === undefined) ge.cardScrollOffset[i] = 0;
+      ge.cardScrollOffset[i] += 0.55;
+
+      g.font = "bold 8px 'SF Mono', monospace";
+      const textW = g.measureText(fullText).width;
+      const maxScroll = textW + 40;
+      const scrollX = 5 - (ge.cardScrollOffset[i] % maxScroll);
+
+      g.fillStyle = '#a5b4fc';
+      g.fillText(fullText, scrollX, CARD_H - 8);
+      g.restore();
+
+      g.restore();
+    }
+  }
 }
 
 function animate3D() {
@@ -1705,18 +1797,58 @@ function animate3D() {
       }
     }
   }
-  // Genies float + rotate + pulse
-  const floatZ = Math.sin(t * .72) * 8.5;
-  const pulse = .92 + Math.sin(t * 1.8) * .14;
-  for (const ge of Object.values(genieMap)) {
+  // Genies float + rotate + pulse — три уровня интенсивности
+  const nowSec = Date.now() / 1000;
+  for (const [sid, ge] of Object.entries(genieMap)) {
     const g = ge.group;
-    g.position.z = floatZ;
-    g.position.y = g.userData.baseY + Math.sin(t * .48) * 3.5;
-    g.rotation.z += .008;
-    if (g.userData.orb) g.userData.orb.scale.setScalar(pulse);
-    if (g.userData.core) g.userData.core.material.emissiveIntensity = .40 + Math.sin(t * 2.2) * .22;
+    const agents = ge.activeAgents || [];
+    const sd = ge.sessionData || {};
+    const recentActivity = sd.last_event_ts && (nowSec - sd.last_event_ts) < 60;
+    const hasSubAgents = agents.length > 0;
+    const soloWIP = recentActivity && !hasSubAgents;
+
+    let floatSpeed   = 0.72,  floatAmp  = 8.5;
+    let floatYSpeed  = 0.48,  floatYAmp = 3.5;
+    let rotSpeed     = 0.008;
+    let pulseSpeed   = 1.8,   pulseAmp  = 0.14, pulseBase = 0.92;
+    let emivBase     = 0.40,  emivAmp   = 0.22, emivSpeed = 2.2;
+    let lightBase    = 1.2,   lightAmp  = 0.35, lightSpeed = 1.9;
+    let orbScaleMult = 1.0;
+    let orbEmivBoost = 0;
+
+    if (soloWIP) {
+      floatSpeed = 1.0; floatAmp = 11.0;
+      rotSpeed = 0.013;
+      pulseSpeed = 2.8; pulseAmp = 0.20;
+      emivBase = 0.55; emivAmp = 0.28;
+      lightBase = 1.8; lightAmp = 0.45;
+    } else if (hasSubAgents) {
+      floatSpeed = 1.55; floatAmp = 16.0;
+      floatYSpeed = 0.90; floatYAmp = 5.0;
+      rotSpeed = 0.022;
+      pulseSpeed = 4.2; pulseAmp = 0.28; pulseBase = 1.0;
+      emivBase = 0.72; emivAmp = 0.32; emivSpeed = 3.8;
+      lightBase = 2.4; lightAmp = 0.60;
+      orbScaleMult = 1.22;
+      orbEmivBoost = 0.3;
+    }
+
+    g.position.z = Math.sin(t * floatSpeed) * floatAmp;
+    g.position.y = g.userData.baseY + Math.sin(t * floatYSpeed) * floatYAmp;
+    g.rotation.z += rotSpeed;
+
+    const pulse = pulseBase + Math.sin(t * pulseSpeed) * pulseAmp;
+    if (g.userData.orb) {
+      g.userData.orb.scale.setScalar(pulse * orbScaleMult);
+      if (hasSubAgents) {
+        g.userData.orb.material.emissiveIntensity = 0.35 + Math.sin(t * 3.5) * 0.25 + orbEmivBoost;
+      }
+    }
+    if (g.userData.core) {
+      g.userData.core.material.emissiveIntensity = emivBase + Math.sin(t * emivSpeed) * emivAmp;
+    }
     const gl = g.children.find(c => c.isLight);
-    if (gl) gl.intensity = 1.2 + Math.sin(t * 1.9) * .35;
+    if (gl) gl.intensity = lightBase + Math.sin(t * lightSpeed) * lightAmp;
   }
 }
 
@@ -1738,6 +1870,23 @@ function loop() {
   for (const entry of Object.values(penguinMap)) {
     const idx = entry.stationIdx;
     stationScrollOffset[idx] = (stationScrollOffset[idx] || 0) + 0.4;
+  }
+
+  // Advance genie orbit angles
+  const now = Date.now() / 1000;
+  for (const [sid, ge] of Object.entries(genieMap)) {
+    const agents = ge.activeAgents || [];
+    if (!genieOrbitAngles[sid]) {
+      genieOrbitAngles[sid] = agents.map((_, i) => i * (Math.PI * 2 / Math.max(agents.length, 1)));
+    }
+    while (genieOrbitAngles[sid].length < agents.length) {
+      genieOrbitAngles[sid].push(Math.random() * Math.PI * 2);
+    }
+    genieOrbitAngles[sid].length = agents.length;
+    const speeds = [0.013, 0.010, 0.008];
+    for (let i = 0; i < genieOrbitAngles[sid].length; i++) {
+      genieOrbitAngles[sid][i] += speeds[i] || 0.010;
+    }
   }
 
   draw2D();
