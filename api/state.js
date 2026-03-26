@@ -89,7 +89,7 @@ function computeState(events, startTs) {
     group.sort((a, b) => b.last_event_ts - a.last_event_ts);
     const primary = group[0];
     for (const dup of group.slice(1)) {
-      if (Math.abs(primary.started_at - dup.started_at) < 10) {
+      if (Math.abs(primary.started_at - dup.started_at) < 300) {
         primary.tool_count += dup.tool_count;
         primary.started_at = Math.min(primary.started_at, dup.started_at);
         primary.active_agents.push(...dup.active_agents);

@@ -116,29 +116,35 @@ describe('deduplication: same cwd+type within 10s', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 4. Dedup: same cwd+type but > 10s apart → NOT merged, both visible
+// 4. Dedup: same cwd+type but > 300s apart → NOT merged, both visible
 // ---------------------------------------------------------------------------
 
-describe('deduplication: same cwd+type more than 10s apart — not merged', () => {
-  it('two sessions with same cwd+type started 15s apart → both visible', () => {
+describe('deduplication: same cwd+type more than 300s apart — not merged', () => {
+  it('two sessions with same cwd+type started 350s apart → both visible', () => {
+    // Both sessions must have recent activity (< 300s TTL) but start times 350s apart.
+    // 'first' started at base-351 and had a recent event at base-10 (reactivated).
+    // 'second' started at base-1.
+    // Difference in started_at = 350 > 300 → must NOT merge.
     const base = now();
     const events = [
-      { ts: base - 50, session_id: 'first',  phase: 'session_start', cwd: '/proj', session_type: 'vscode' },
-      { ts: base - 48, session_id: 'first',  phase: 'start', tool: 'Bash', cwd: '/proj', session_type: 'vscode' },
-      { ts: base - 35, session_id: 'second', phase: 'session_start', cwd: '/proj', session_type: 'vscode' },
-      { ts: base - 33, session_id: 'second', phase: 'start', tool: 'Read', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 351, session_id: 'first',  phase: 'session_start', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 10,  session_id: 'first',  phase: 'start', tool: 'Bash', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 1,   session_id: 'second', phase: 'session_start', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 0.5, session_id: 'second', phase: 'start', tool: 'Read', cwd: '/proj', session_type: 'vscode' },
     ];
     const result = computeState(events, 0);
     expect(result.sessions.length).toBe(2);
   });
 
-  it('sessions exactly 10s apart are NOT merged (boundary: strict < 10)', () => {
+  it('sessions exactly 300s apart are NOT merged (boundary: strict < 300)', () => {
+    // 'a' started at base-301, recent event at base-10; 'b' started at base-1.
+    // Difference = 300 — not strictly less than 300 → must NOT merge.
     const base = now();
     const events = [
-      { ts: base - 50, session_id: 'a', phase: 'session_start', cwd: '/proj', session_type: 'cli' },
-      { ts: base - 49, session_id: 'a', phase: 'start', tool: 'Bash', cwd: '/proj', session_type: 'cli' },
-      { ts: base - 40, session_id: 'b', phase: 'session_start', cwd: '/proj', session_type: 'cli' },
-      { ts: base - 39, session_id: 'b', phase: 'start', tool: 'Read', cwd: '/proj', session_type: 'cli' },
+      { ts: base - 301, session_id: 'a', phase: 'session_start', cwd: '/proj', session_type: 'cli' },
+      { ts: base - 10,  session_id: 'a', phase: 'start', tool: 'Bash', cwd: '/proj', session_type: 'cli' },
+      { ts: base - 1,   session_id: 'b', phase: 'session_start', cwd: '/proj', session_type: 'cli' },
+      { ts: base - 0.5, session_id: 'b', phase: 'start', tool: 'Read', cwd: '/proj', session_type: 'cli' },
     ];
     const result = computeState(events, 0);
     expect(result.sessions.length).toBe(2);
