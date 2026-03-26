@@ -398,6 +398,97 @@ header{
 .tb-wait {background:rgba(251,191,36,.12);color:var(--amber)}
 .tl-agent{font-size:11px;font-weight:600;color:var(--dim)}
 .tl-detail{font-size:10px;color:var(--dim2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── Responsive: mob-tabs hidden on desktop/tablet ── */
+.mob-tabs {
+  display: none;
+}
+
+/* ── Responsive: Tablet (768px – 1023px) ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  #agents-strip { display: none; }
+  .metrics-row {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  #main {
+    grid-template-columns: 1fr 272px;
+    grid-template-rows: auto 1fr;
+  }
+  #office-area {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  #timeline-panel {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+}
+
+/* ── Responsive: Mobile (< 768px) ── */
+@media (max-width: 767px) {
+  #agents-strip { display: none !important; }
+  .metrics-row { display: none !important; }
+  .h-clock { display: none; }
+  .h-meta { display: none; }
+  .release-chip { display: none !important; }
+
+  header {
+    grid-template-columns: auto 1fr;
+    padding: 0 14px;
+  }
+
+  .mob-tabs {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .mob-tab {
+    padding: 5px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(255,255,255,.10);
+    background: transparent;
+    color: var(--dim);
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all .15s;
+  }
+  .mob-tab.active {
+    background: rgba(129,140,248,.15);
+    border-color: rgba(129,140,248,.35);
+    color: var(--indigo);
+  }
+
+  #main {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  #office-area {
+    flex: 1;
+    border-radius: 0;
+    border: none;
+  }
+
+  #timeline-panel {
+    flex: 1;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  #office-area.tab-hidden,
+  #timeline-panel.tab-hidden {
+    display: none !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -416,6 +507,10 @@ header{
       <span class="logo-text">Agent Dashboard</span>
       <div class="live-chip"><span class="live-dot"></span>Live</div>
     </div>
+    <nav class="mob-tabs" id="mobTabs">
+      <button class="mob-tab active" data-tab="workspace">Workspace</button>
+      <button class="mob-tab" data-tab="timeline">Timeline</button>
+    </nav>
     <div class="h-clock" id="clock">--:--:--</div>
     <div class="h-right" style="justify-self:end">
       <div class="release-chip" id="release-chip" style="display:none">
@@ -1987,6 +2082,29 @@ fetchEvents();
 fetchRelease();
 setInterval(fetchState, 1500);
 setInterval(fetchEvents, 800);
+
+// Mobile tab switching
+(function() {
+  const tabs = document.querySelectorAll('.mob-tab');
+  const officeArea = document.getElementById('office-area');
+  const timelinePanel = document.getElementById('timeline-panel');
+
+  function switchTab(tabName) {
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+    if (tabName === 'workspace') {
+      officeArea.classList.remove('tab-hidden');
+      timelinePanel.classList.add('tab-hidden');
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+    } else {
+      officeArea.classList.add('tab-hidden');
+      timelinePanel.classList.remove('tab-hidden');
+    }
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  });
+})();
 </script>
 </body>
 </html>
