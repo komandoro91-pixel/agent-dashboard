@@ -681,17 +681,15 @@ for (let i = 0; i < NUM_DESKS; i++) {
   const dirX = Math.cos(a), dirY = Math.sin(a);
   const deskX = CX + dirX * DESK_RADIUS;
   const deskY = CY + dirY * DESK_RADIUS;
-  // bbHalfY = half-height of the rotated monitor bounding box in canvas Y.
-  // Label sits 6px above the monitor's topmost canvas-Y edge, centered at deskX.
-  const monAngle = Math.atan2(CY - deskY, CX - deskX) + Math.PI / 2;
-  const bbHalfY = 26 * Math.abs(Math.sin(monAngle)) + 16 * Math.abs(Math.cos(monAngle));
+  // Label at the midpoint of the far (outward) edge of the monitor.
+  // CH=32 is aligned radially, so moving CH/2=16 in the outward direction gives the far edge center.
   stations.push({
     id: i, angle: a, dirX, dirY,
     deskX, deskY,
     chairX: CX + dirX * (DESK_RADIUS - 38),
     chairY: CY + dirY * (DESK_RADIUS - 38),
-    labelX: deskX,
-    labelY: deskY - bbHalfY - 6,
+    labelX: deskX + dirX * 16,
+    labelY: deskY + dirY * 16,
   });
 }
 
