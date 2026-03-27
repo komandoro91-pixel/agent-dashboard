@@ -2,11 +2,8 @@ name: Daily Dashboard Update
 
 on:
   schedule:
-    - cron: '0 10 * * *'    # 12:00 Kyiv (UTC+2 winter) — primary
-    - cron: '15 10 * * *'   # retry +15 min
-    - cron: '30 10 * * *'   # retry +30 min
-    - cron: '45 10 * * *'   # retry +45 min
-    - cron: '0 11 * * *'    # retry +60 min
+    - cron: '0 10 * * *'    # 12:00 Kyiv (UTC+2) — primary; GitHub typically delays ~55 min
+    - cron: '0 11 * * *'    # fallback +1h if primary missed
   workflow_dispatch:        # Allow manual trigger
 
 permissions:
