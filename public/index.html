@@ -681,8 +681,11 @@ for (let i = 0; i < NUM_DESKS; i++) {
   const dirX = Math.cos(a), dirY = Math.sin(a);
   const deskX = CX + dirX * DESK_RADIUS;
   const deskY = CY + dirY * DESK_RADIUS;
-  // Label at the midpoint of the far (outward) edge of the monitor.
-  // CH=32 is aligned radially, so moving CH/2=16 in the outward direction gives the far edge center.
+  // Label at the midpoint of the far (outward) edge of the monitor, rotated along that edge.
+  // CH=32 is aligned radially; perpendicular gives the edge direction.
+  const perpAngle = Math.atan2(dirX, -dirY);
+  const labelAngle = perpAngle > Math.PI / 2 ? perpAngle - Math.PI :
+                     perpAngle < -Math.PI / 2 ? perpAngle + Math.PI : perpAngle;
   stations.push({
     id: i, angle: a, dirX, dirY,
     deskX, deskY,
@@ -690,6 +693,7 @@ for (let i = 0; i < NUM_DESKS; i++) {
     chairY: CY + dirY * (DESK_RADIUS - 38),
     labelX: deskX + dirX * 16,
     labelY: deskY + dirY * 16,
+    labelAngleDeg: labelAngle * 180 / Math.PI,
   });
 }
 
@@ -1424,6 +1428,7 @@ function updateLabels() {
     const st = stations[entry.stationIdx];
     item.el.style.left = (st.labelX * sx) + 'px';
     item.el.style.top  = (st.labelY * sy) + 'px';
+    item.el.style.transform = `translate(-50%,-50%) rotate(${st.labelAngleDeg}deg)`;
   }
 }
 
