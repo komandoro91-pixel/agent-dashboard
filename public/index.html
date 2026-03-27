@@ -425,8 +425,8 @@ header{
   }
 }
 
-/* ── Responsive: Mobile (< 768px) ── */
-@media (max-width: 767px) {
+/* ── Responsive: Mobile (< 768px) or phone landscape ── */
+@media (max-width: 767px), (orientation: landscape) and (max-height: 500px) {
   #agents-strip { display: none !important; }
   .metrics-row { display: none !important; }
   .h-clock { display: none; }
@@ -725,7 +725,7 @@ function resize() {
   dpr = window.devicePixelRatio || 1;
   const aw = officeArea.clientWidth;
   const ah = officeArea.clientHeight;
-  const isMobile = window.innerWidth < 768;
+  const isMobile = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth > window.innerHeight);
   scaleRatio = isMobile ? Math.max(aw / GW, ah / GH) : Math.min(aw / GW, ah / GH);
 
   cssW = Math.floor(GW * scaleRatio);
@@ -755,6 +755,7 @@ function resize() {
 }
 
 window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 150));
 
 // ── BG dirty flag (kept for compatibility) ───────────────
 let bgDirty = true;
