@@ -6,5 +6,9 @@
   {
     "date": "2026-03-26",
     "note": "Add colored top accent bar to metric cards"
+  },
+  {
+    "date": "2026-03-27",
+    "note": "Pulse glow ring on live-dot indicator"
   }
 ]
