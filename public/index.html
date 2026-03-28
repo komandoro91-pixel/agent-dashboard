@@ -639,19 +639,53 @@ header{
 //  AGENT COLORS
 // ═══════════════════════════════════════════════════════════
 const AGENT_COLORS = {
-  'developer':          {bg:'rgba(52,211,153,.15)',  fg:'#34d399'},
-  'senior-developer':   {bg:'rgba(52,211,153,.15)',  fg:'#34d399'},
-  'researcher':         {bg:'rgba(96,165,250,.15)',   fg:'#60a5fa'},
-  'test-engineer':      {bg:'rgba(251,191,36,.15)',   fg:'#fbbf24'},
-  'tester':             {bg:'rgba(251,191,36,.15)',   fg:'#fbbf24'},
-  'reviewer':           {bg:'rgba(167,139,250,.15)',  fg:'#a78bfa'},
-  'debugger':           {bg:'rgba(248,113,113,.15)',  fg:'#f87171'},
-  'n8n-editor':         {bg:'rgba(251,146,60,.15)',   fg:'#fb923c'},
-  'backend-architect':  {bg:'rgba(34,211,238,.15)',   fg:'#22d3ee'},
-  'frontend-developer': {bg:'rgba(244,114,182,.15)',  fg:'#f472b6'},
-  'Explore':            {bg:'rgba(96,165,250,.15)',   fg:'#60a5fa'},
-  'Plan':               {bg:'rgba(129,140,248,.15)',  fg:'#818cf8'},
-  'general-purpose':    {bg:'rgba(148,163,184,.15)',  fg:'#94a3b8'},
+  // ── Core dev ──
+  'developer':               {bg:'rgba(52,211,153,.15)',   fg:'#34d399'},
+  'senior-developer':        {bg:'rgba(52,211,153,.15)',   fg:'#34d399'},
+  'frontend-developer':      {bg:'rgba(244,114,182,.15)',  fg:'#f472b6'},
+  'backend-architect':       {bg:'rgba(34,211,238,.15)',   fg:'#22d3ee'},
+  'mobile-app-builder':      {bg:'rgba(124,58,237,.15)',   fg:'#7c3aed'},
+  'rapid-prototyper':        {bg:'rgba(252,211,77,.15)',   fg:'#fcd34d'},
+  // ── QA / Testing ──
+  'test-engineer':           {bg:'rgba(251,191,36,.15)',   fg:'#fbbf24'},
+  'tester':                  {bg:'rgba(251,191,36,.15)',   fg:'#fbbf24'},
+  'api-tester':              {bg:'rgba(234,179,8,.15)',    fg:'#eab308'},
+  'model-qa':                {bg:'rgba(132,204,22,.15)',   fg:'#84cc16'},
+  // ── Review / Debug ──
+  'reviewer':                {bg:'rgba(167,139,250,.15)',  fg:'#a78bfa'},
+  'debugger':                {bg:'rgba(248,113,113,.15)',  fg:'#f87171'},
+  'security-engineer':       {bg:'rgba(239,68,68,.15)',    fg:'#ef4444'},
+  'threat-detection-engineer':{bg:'rgba(220,38,38,.15)',   fg:'#dc2626'},
+  // ── Research / Docs ──
+  'researcher':              {bg:'rgba(96,165,250,.15)',   fg:'#60a5fa'},
+  'technical-writer':        {bg:'rgba(56,189,248,.15)',   fg:'#38bdf8'},
+  'claude-code-guide':       {bg:'rgba(99,102,241,.15)',   fg:'#6366f1'},
+  'tool-evaluator':          {bg:'rgba(20,184,166,.15)',   fg:'#14b8a6'},
+  // ── AI / ML ──
+  'ai-engineer':             {bg:'rgba(16,185,129,.15)',   fg:'#10b981'},
+  'optimization-architect':  {bg:'rgba(5,150,105,.15)',    fg:'#059669'},
+  'image-prompt-engineer':   {bg:'rgba(236,72,153,.15)',   fg:'#ec4899'},
+  // ── DevOps / Infra ──
+  'devops-automator':        {bg:'rgba(245,158,11,.15)',   fg:'#f59e0b'},
+  'git-workflow-master':     {bg:'rgba(217,119,6,.15)',    fg:'#d97706'},
+  'incident-commander':      {bg:'rgba(234,88,12,.15)',    fg:'#ea580c'},
+  // ── Content / Brand / Growth ──
+  'content-creator':         {bg:'rgba(244,63,94,.15)',    fg:'#f43f5e'},
+  'brand-guardian':          {bg:'rgba(139,92,246,.15)',   fg:'#8b5cf6'},
+  'visual-storyteller':      {bg:'rgba(217,70,239,.15)',   fg:'#d946ef'},
+  'growth-hacker':           {bg:'rgba(163,230,53,.15)',   fg:'#a3e635'},
+  'instagram-curator':       {bg:'rgba(225,29,72,.15)',    fg:'#e11d48'},
+  'carousel-growth-engine':  {bg:'rgba(249,115,22,.15)',   fg:'#f97316'},
+  // ── Support / Workflow ──
+  'support-responder':       {bg:'rgba(14,165,233,.15)',   fg:'#0ea5e9'},
+  'workflow-optimizer':      {bg:'rgba(45,212,191,.15)',   fg:'#2dd4bf'},
+  // ── n8n / Misc ──
+  'n8n-editor':              {bg:'rgba(251,146,60,.15)',   fg:'#fb923c'},
+  'statusline-setup':        {bg:'rgba(100,116,139,.15)',  fg:'#64748b'},
+  // ── Meta ──
+  'Explore':                 {bg:'rgba(96,165,250,.15)',   fg:'#60a5fa'},
+  'Plan':                    {bg:'rgba(129,140,248,.15)',  fg:'#818cf8'},
+  'general-purpose':         {bg:'rgba(148,163,184,.15)',  fg:'#94a3b8'},
 };
 function agentColor(role){ return AGENT_COLORS[role]||{bg:'rgba(148,163,184,.15)',fg:'#94a3b8'}; }
 
