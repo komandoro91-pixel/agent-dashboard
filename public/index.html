@@ -152,8 +152,10 @@ header{
   grid-column:2;grid-row:2;
   position:relative;overflow:hidden;
   border-radius:var(--r);
-  border:1px solid var(--b);
+  border:1px solid transparent;
   background:#07070e;
+  box-shadow:0 0 0 1px rgba(129,140,248,.18),0 0 32px rgba(99,102,241,.07),inset 0 0 0 1px rgba(255,255,255,.04);
+  background-clip:padding-box;
 }
 #stage{
   position:absolute;inset:0;
