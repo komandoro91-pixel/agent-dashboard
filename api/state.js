@@ -59,7 +59,10 @@ function computeState(events, startTs) {
     } else if (phase === 'end') {
       if (ev.is_agent && pending[sid]) {
         const agentType = ev.agent_type || 'general-purpose';
-        const idx = pending[sid].findIndex(ag => ag.agent_type === agentType);
+        const desc = ev.detail || '';
+        // Match by agent_type + description for precise closing of parallel agents
+        let idx = pending[sid].findIndex(ag => ag.agent_type === agentType && ag.description === desc);
+        if (idx < 0) idx = pending[sid].findIndex(ag => ag.agent_type === agentType);
         if (idx >= 0) {
           const doneAg = pending[sid].splice(idx, 1)[0];
           doneAg.completed_at = ts;
@@ -76,8 +79,9 @@ function computeState(events, startTs) {
     sess.completed_agents = (completed[sid] || []).slice(-20);
   }
 
-  // Deduplicate: merge sessions from same cwd+type that started within 60s of each other
+  // Deduplicate: merge sessions from same cwd+type that started within 5s of each other
   // (VS Code creates 2 processes per tab with different session_ids)
+  // Threshold 5s catches VS Code dual-process but not genuinely parallel sessions
   const groupMap = {};
   for (const sess of Object.values(sessions)) {
     const key = `${sess.cwd}|||${sess.session_type}`;
@@ -89,7 +93,7 @@ function computeState(events, startTs) {
     group.sort((a, b) => b.last_event_ts - a.last_event_ts);
     const primary = group[0];
     for (const dup of group.slice(1)) {
-      if (Math.abs(primary.started_at - dup.started_at) < 300) {
+      if (Math.abs(primary.started_at - dup.started_at) < 5) {
         primary.tool_count += dup.tool_count;
         primary.started_at = Math.min(primary.started_at, dup.started_at);
         primary.active_agents.push(...dup.active_agents);
