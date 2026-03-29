@@ -429,6 +429,7 @@ header{
 
 /* ── Responsive: Mobile (< 768px) or phone landscape ── */
 @media (max-width: 767px), (orientation: landscape) and (max-height: 500px) {
+  .blob { display: none !important; }
   #agents-strip { display: none !important; }
   .metrics-row { display: none !important; }
   .h-clock { display: none; }
@@ -756,12 +757,14 @@ const bgCvs       = document.getElementById('bg-canvas');
 const bgCtx       = bgCvs.getContext('2d');
 
 let cssW = 0, cssH = 0, dpr = 1, scaleRatio = 1;
+const isMobileDevice = window.innerWidth < 768;
 
 function resize() {
   dpr = window.devicePixelRatio || 1;
   const aw = officeArea.clientWidth;
   const ah = officeArea.clientHeight;
   const isMobile = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth > window.innerHeight);
+  if (isMobile) dpr = Math.min(dpr, 1.5);
   scaleRatio = isMobile ? Math.max(aw / GW, ah / GH) : Math.min(aw / GW, ah / GH);
 
   cssW = Math.floor(GW * scaleRatio);
@@ -790,7 +793,6 @@ function resize() {
   updateLabels();
 }
 
-window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 150));
 
 // ── BG dirty flag (kept for compatibility) ───────────────
@@ -1097,7 +1099,7 @@ function drawConsoles(g) {
     g.rotate(angle + Math.PI / 2);
 
     g.shadowColor = `${agColor}73`;
-    g.shadowBlur  = 14;
+    g.shadowBlur  = isMobileDevice ? 0 : 14;
     const bodyG = g.createLinearGradient(-CW/2, -CH/2, CW/2, CH/2);
     bodyG.addColorStop(0,   'rgba(200,220,240,0.90)');
     bodyG.addColorStop(0.4, 'rgba(175,198,225,0.82)');
@@ -1174,10 +1176,10 @@ function drawHoloRing(g) {
 
   g.beginPath(); g.arc(0, 0, ringR, 0, Math.PI*2);
   g.strokeStyle = `rgba(0,212,255,${0.68 * pulse})`; g.lineWidth = 2.5;
-  g.shadowColor = 'rgba(0,212,255,0.85)'; g.shadowBlur = 12; g.stroke();
+  g.shadowColor = 'rgba(0,212,255,0.85)'; g.shadowBlur = isMobileDevice ? 0 : 12; g.stroke();
 
   g.beginPath(); g.arc(0, 0, ringR - 9, 0, Math.PI*2);
-  g.strokeStyle = `rgba(0,212,255,${0.30 * pulse})`; g.lineWidth = 1; g.shadowBlur = 5; g.stroke();
+  g.strokeStyle = `rgba(0,212,255,${0.30 * pulse})`; g.lineWidth = 1; g.shadowBlur = isMobileDevice ? 0 : 5; g.stroke();
 
   g.save(); g.rotate(rotation);
   const dashCount = 12;
@@ -1186,7 +1188,7 @@ function drawHoloRing(g) {
     g.beginPath();
     g.moveTo(Math.cos(a) * (ringR-4), Math.sin(a) * (ringR-4));
     g.lineTo(Math.cos(a) * (ringR+4), Math.sin(a) * (ringR+4));
-    g.strokeStyle = `rgba(100,240,255,${0.92 * pulse})`; g.lineWidth = 2; g.shadowBlur = 7; g.stroke();
+    g.strokeStyle = `rgba(100,240,255,${0.92 * pulse})`; g.lineWidth = 2; g.shadowBlur = isMobileDevice ? 0 : 7; g.stroke();
   }
   g.restore();
 
@@ -1196,14 +1198,14 @@ function drawHoloRing(g) {
   cg.addColorStop(1,   'rgba(0,0,0,0)');
   g.fillStyle = cg; g.beginPath(); g.arc(0, 0, ringR - 9, 0, Math.PI*2); g.fill();
 
-  g.strokeStyle = `rgba(0,212,255,${0.20 * pulse})`; g.lineWidth = 0.8; g.shadowBlur = 4;
+  g.strokeStyle = `rgba(0,212,255,${0.20 * pulse})`; g.lineWidth = 0.8; g.shadowBlur = isMobileDevice ? 0 : 4;
   g.beginPath();
   g.moveTo(-(ringR-14), 0); g.lineTo(ringR-14, 0);
   g.moveTo(0, -(ringR-14)); g.lineTo(0, ringR-14);
   g.stroke();
 
   g.beginPath(); g.arc(0, 0, 3.5, 0, Math.PI*2);
-  g.fillStyle = `rgba(0,230,255,${0.75 * pulse})`; g.shadowBlur = 8; g.fill();
+  g.fillStyle = `rgba(0,230,255,${0.75 * pulse})`; g.shadowBlur = isMobileDevice ? 0 : 8; g.fill();
 
   g.restore(); g.shadowBlur = 0; g.shadowColor = 'transparent';
 }
@@ -1227,7 +1229,7 @@ function drawAmbientGlow(g) {
   g.moveTo(90, stripY); g.lineTo(320, stripY);
   g.moveTo(440, stripY); g.lineTo(GW-90, stripY);
   g.strokeStyle = `rgba(180,210,255,${0.20 + 0.10 * Math.sin(ledPhase * 1.8)})`;
-  g.lineWidth = 2; g.shadowColor = 'rgba(180,210,255,0.5)'; g.shadowBlur = 6;
+  g.lineWidth = 2; g.shadowColor = 'rgba(180,210,255,0.5)'; g.shadowBlur = isMobileDevice ? 0 : 6;
   g.stroke(); g.shadowBlur = 0;
 }
 
@@ -1256,12 +1258,13 @@ function renderBG() {
 // ═══════════════════════════════════════════════════════════
 const threeCanvas = document.getElementById('three-canvas');
 
+const isMobile = window.innerWidth < 768;
 const renderer = new THREE.WebGLRenderer({
   canvas:    threeCanvas,
   alpha:     true,
-  antialias: true,
+  antialias: !isMobile,
 });
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = !isMobile;
 renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
 renderer.setClearColor(0x000000, 0);
 
@@ -1277,8 +1280,8 @@ scene.add(ambientLight);
 
 const dirLight = new THREE.DirectionalLight(0xffeedd, 1.2);
 dirLight.position.set(GW*.7, -GH*.2, 400);
-dirLight.castShadow = true;
-dirLight.shadow.mapSize.set(2048, 2048);
+dirLight.castShadow = !isMobile;
+dirLight.shadow.mapSize.set(isMobile ? 512 : 2048, isMobile ? 512 : 2048);
 dirLight.shadow.camera.near = .5; dirLight.shadow.camera.far = 2000;
 dirLight.shadow.camera.left = -500; dirLight.shadow.camera.right = 500;
 dirLight.shadow.camera.top  =  500; dirLight.shadow.camera.bottom = -500;
@@ -2155,8 +2158,8 @@ async function fetchRelease() {
 fetchState();
 fetchEvents();
 fetchRelease();
-setInterval(fetchState, 1500);
-setInterval(fetchEvents, 800);
+setInterval(fetchState, isMobileDevice ? 3000 : 1500);
+setInterval(fetchEvents, isMobileDevice ? 2000 : 800);
 
 // Mobile tab switching
 (function() {
