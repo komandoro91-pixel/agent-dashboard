@@ -38,7 +38,7 @@ function computeState(events, startTs) {
       pending[sid] = [];
     } else if (phase === 'session_end') {
       sess.status = 'ended';
-      pending[sid] = [];
+      // Don't clear pending — subagents may still be running after parent session ends
     } else if (phase === 'start') {
       if (sess.status === 'ended') sess.status = 'active'; // реактивация после mid-session Stop
       if (tool !== 'Agent') {
@@ -104,7 +104,7 @@ function computeState(events, startTs) {
   }
 
   const visible = Object.values(sessions).filter(
-    s => s.status !== 'ended' && now - s.last_event_ts < 300
+    s => (s.status !== 'ended' || s.active_agents.length > 0) && now - s.last_event_ts < 300
   );
   const total_active = visible.filter(
     s => s.status === 'active' || s.active_agents.length > 0

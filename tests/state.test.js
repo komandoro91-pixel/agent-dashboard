@@ -26,6 +26,19 @@ describe('session_end removes session from visible', () => {
     expect(result.total_active).toBe(0);
   });
 
+  it('ended session with active agents remains visible', () => {
+    const base = now();
+    const events = [
+      { ts: base - 30, session_id: 'sess1', phase: 'session_start', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 20, session_id: 'sess1', phase: 'start', tool: 'Agent', is_agent: true, agent_type: 'developer', detail: 'task', cwd: '/proj', session_type: 'vscode' },
+      { ts: base - 10, session_id: 'sess1', phase: 'session_end', cwd: '/proj', session_type: 'vscode' },
+    ];
+    const result = computeState(events, 0);
+    expect(result.sessions.length).toBe(1);
+    expect(result.active_penguins.length).toBe(1);
+    expect(result.active_penguins[0].agent_type).toBe('developer');
+  });
+
   it('session_end on one session does not affect another active session', () => {
     const events = [
       ev('session_start', { session_id: 'ended', cwd: '/proj-ended', tsOffset: 20 }),
