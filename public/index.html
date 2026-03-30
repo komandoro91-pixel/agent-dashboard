@@ -113,9 +113,9 @@ header{
   border-radius:var(--r);padding:16px 18px;
   background:var(--glass);border:1px solid var(--b);
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  position:relative;overflow:hidden;transition:border-color .2s;
+  position:relative;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;
 }
-.metric-card:hover{border-color:var(--bH)}
+.metric-card:hover{border-color:var(--bH);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
 .metric-card::after{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,transparent,var(--bH),transparent);opacity:.6;
