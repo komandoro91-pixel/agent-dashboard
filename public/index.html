@@ -1525,6 +1525,7 @@ function despawnGenie(sessionId) {
   freeGenieSlots.push(entry.slotIdx);
   freeGenieSlots.sort((a, b) => a - b);
   delete genieMap[sessionId];
+  delete genieOrbitAngles[sessionId];
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1694,7 +1695,7 @@ function renderSessions(state) {
   }
 
   container.innerHTML = state.sessions.map(session => {
-    const cwdShort = session.cwd.replace(/^.*[/\\]/, '') || session.cwd;
+    const cwdShort = esc(session.cwd.replace(/^.*[/\\]/, '') || session.cwd);
     const badgeCls = (session.session_type === 'vscode') ? '' : 'cli';
     const badgeLabel = session.session_type || 'cli';
     const dotCls = (session.status === 'active') ? '' : 'idle';
@@ -1716,7 +1717,7 @@ function renderSessions(state) {
     return `<div class="session-section">
       <div class="session-header">
         <span class="session-dot ${dotCls}"></span>
-        <span class="session-cwd" title="${session.cwd}">${cwdShort}</span>
+        <span class="session-cwd" title="${esc(session.cwd)}">${cwdShort}</span>
         <span class="session-badge ${badgeCls}">${badgeLabel}</span>
       </div>
       <div class="session-agents">${agentTiles}</div>
@@ -1794,9 +1795,6 @@ async function fetchState() {
     if (!res.ok) return;
     const data = await res.json();
     applyState(data);
-    renderSessions(data);
-    renderMetrics();
-    renderKanban();
   } catch (_) {}
 }
 

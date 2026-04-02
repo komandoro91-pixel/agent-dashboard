@@ -4,6 +4,12 @@ module.exports = async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
 
+  const token = req.headers['x-token'] || '';
+  const expected = process.env.COLLECT_TOKEN || '';
+  if (!expected || token !== expected) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+
   const r = new Redis({
     url: process.env.UPSTASH_REDIS_REST_URL,
     token: process.env.UPSTASH_REDIS_REST_TOKEN,
