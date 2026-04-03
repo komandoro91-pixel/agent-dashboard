@@ -148,7 +148,10 @@ header{
   0%,100%{opacity:.3;transform:scaleX(.6)}
   50%{opacity:.8;transform:scaleX(1)}
 }
-.metric-icon{font-size:16px;margin-bottom:10px;display:block}
+.metric-icon{font-size:16px;margin-bottom:10px;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:var(--glass);border:1px solid var(--b);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.metric-card:nth-child(1) .metric-icon{background:rgba(52,211,153,.10);border-color:rgba(52,211,153,.20);box-shadow:0 0 10px rgba(52,211,153,.15)}
+.metric-card:nth-child(2) .metric-icon{background:rgba(129,140,248,.10);border-color:rgba(129,140,248,.20);box-shadow:0 0 10px rgba(129,140,248,.15)}
+.metric-card:nth-child(3) .metric-icon{background:rgba(251,191,36,.10);border-color:rgba(251,191,36,.20);box-shadow:0 0 10px rgba(251,191,36,.15)}
 .metric-value{
   font-size:30px;font-weight:700;line-height:1;margin-bottom:3px;
   letter-spacing:-.03em;font-variant-numeric:tabular-nums;
