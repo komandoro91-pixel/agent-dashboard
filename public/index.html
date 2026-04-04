@@ -162,6 +162,21 @@ header{
 .metric-label{font-size:11px;color:var(--dim);font-weight:500}
 
 /* ── Canvas area (office) ── */
+#office-area::after{
+  content:'';
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,.13) 2px,
+    rgba(0,0,0,.13) 4px
+  );
+  pointer-events:none;
+  z-index:2;
+  border-radius:var(--r);
+  opacity:.4;
+}
 #office-area{
   grid-column:2;grid-row:2;
   position:relative;overflow:hidden;
