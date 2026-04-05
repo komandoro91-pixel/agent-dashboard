@@ -42,5 +42,9 @@
   {
     "date": "2026-04-04",
     "note": "Subtle scanline overlay on office canvas"
+  },
+  {
+    "date": "2026-04-05",
+    "note": "Animated gradient text on header clock"
   }
 ]

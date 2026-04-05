@@ -48,9 +48,16 @@ header{
 .h-clock{
   font-family:var(--mono);font-size:22px;font-weight:700;
   letter-spacing:.06em;
-  background:linear-gradient(135deg,var(--indigo),var(--cyan));
+  background:linear-gradient(270deg,var(--indigo),var(--cyan),var(--purple),var(--indigo));
+  background-size:300% 300%;
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   text-shadow:none;
+  animation:clock-gradient 6s ease infinite;
+}
+@keyframes clock-gradient{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
 }
 .logo-wrap{display:flex;align-items:center;gap:10px}
 .logo-icon{
