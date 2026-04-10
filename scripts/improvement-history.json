@@ -62,5 +62,9 @@
   {
     "date": "2026-04-09",
     "note": "Glowing bottom edge on metric cards hover"
+  },
+  {
+    "date": "2026-04-10",
+    "note": "Glowing separator line on header border"
   }
 ]
