@@ -66,5 +66,9 @@
   {
     "date": "2026-04-10",
     "note": "Glowing separator line on header border"
+  },
+  {
+    "date": "2026-04-11",
+    "note": "Frosted glow pulse on live-chip badge"
   }
 ]
