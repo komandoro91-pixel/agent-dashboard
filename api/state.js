@@ -15,6 +15,7 @@ function computeState(events, startTs) {
       sessions[sid] = {
         session_id: sid,
         session_type: ev.session_type || 'unknown',
+        provider: ev.provider || (sid.startsWith('antigravity_') ? 'antigravity' : 'claude'),
         cwd: ev.cwd || '',
         status: 'active',
         started_at: ev.ts || 0,
@@ -54,6 +55,7 @@ function computeState(events, startTs) {
           agent_type: ev.agent_type || 'general-purpose',
           description: ev.detail || '',
           started_at: ts,
+          provider: ev.provider || '',
         });
       }
     } else if (phase === 'end') {
@@ -84,7 +86,7 @@ function computeState(events, startTs) {
   // Threshold 5s catches VS Code dual-process but not genuinely parallel sessions
   const groupMap = {};
   for (const sess of Object.values(sessions)) {
-    const key = `${sess.cwd}|||${sess.session_type}`;
+    const key = `${sess.cwd}|||${sess.session_type}|||${sess.provider}`;
     if (!groupMap[key]) groupMap[key] = [];
     groupMap[key].push(sess);
   }

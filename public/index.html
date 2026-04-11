@@ -260,6 +260,12 @@ header{
   color:var(--indigo);font-size:10px;
   box-shadow:0 0 12px rgba(99,102,241,.25);
 }
+.role-label.genie.antigravity{
+  background:rgba(167,139,250,.18);
+  border-color:rgba(167,139,250,.40);
+  color:var(--purple);
+  box-shadow:0 0 12px rgba(167,139,250,.25);
+}
 
 /* ── Sessions sidebar (left) ── */
 #agents-strip{
@@ -914,11 +920,17 @@ const BH_X = GW / 2, BH_Y = 72, BH_R = 42;
 // --- Animation state ---
 let ledPhase = 0, diskAngle = 0, indicatorPhase = 0, floorShimmerT = 0;
 const holoRing = { rotation: 0, rotSpeed: 0.006, pulsePhase: 0, pulseSpeed: 0.028 };
-// consolePulse per-station (6 stations)
+// consolePulse per-station (lazy-extended for overflow desks)
 const consolePulse = Array.from({ length: 6 }, () => ({
   phase: Math.random() * Math.PI * 2,
   speed: Math.random() * 0.018 + 0.008,
 }));
+function getConsolePulse(idx) {
+  if (!consolePulse[idx]) {
+    consolePulse[idx] = { phase: Math.random() * Math.PI * 2, speed: Math.random() * 0.018 + 0.008 };
+  }
+  return consolePulse[idx];
+}
 
 // ─────────────────────────────────────────────────────────
 //  SPACE STATION DRAWING FUNCTIONS
@@ -1235,6 +1247,69 @@ function drawConsoles(g) {
     glowR.addColorStop(1,   'rgba(0,212,255,0)');
     g.fillStyle = glowR; g.beginPath(); g.arc(st.deskX, st.deskY, 44, 0, Math.PI*2); g.fill();
   });
+
+  // ── Overflow wall desks — draw monitor only when occupied ──
+  Object.keys(stationColorMap).forEach(idxStr => {
+    const stIdx = parseInt(idxStr);
+    if (stIdx < NUM_DESKS) return;
+    const st = getStation(stIdx);
+    const cp = getConsolePulse(stIdx);
+    const pulseVal = 0.7 + 0.3 * Math.sin(cp.phase);
+    const wAngle = Math.atan2(CY - st.deskY, CX - st.deskX);
+    const CW = 52, CH = 32;
+    const agColor = stationColorMap[stIdx];
+
+    g.save();
+    g.translate(st.deskX, st.deskY);
+    g.rotate(wAngle + Math.PI / 2);
+    g.shadowColor = `${agColor}73`;
+    g.shadowBlur  = isMobileDevice ? 0 : 14;
+    const bodyG = g.createLinearGradient(-CW/2, -CH/2, CW/2, CH/2);
+    bodyG.addColorStop(0,   'rgba(200,220,240,0.90)');
+    bodyG.addColorStop(0.4, 'rgba(175,198,225,0.82)');
+    bodyG.addColorStop(1,   'rgba(135,162,195,0.70)');
+    g.fillStyle = bodyG;
+    g.beginPath(); rrPath(g, -CW/2, -CH/2, CW, CH, 4); g.fill();
+    g.strokeStyle = `${agColor}8c`; g.lineWidth = 1;
+    g.beginPath(); rrPath(g, -CW/2, -CH/2, CW, CH, 4); g.stroke();
+    const screenG = g.createLinearGradient(-CW/2+6, -CH/2+5, CW/2-6, CH/2-8);
+    screenG.addColorStop(0,   `rgba(0,180,255,${0.65 * pulseVal})`);
+    screenG.addColorStop(0.5, `rgba(0,212,255,${0.82 * pulseVal})`);
+    screenG.addColorStop(1,   `rgba(30,140,255,${0.55 * pulseVal})`);
+    g.fillStyle = screenG;
+    g.beginPath(); rrPath(g, -CW/2+6, -CH/2+5, CW-12, CH-12, 2); g.fill();
+    g.strokeStyle = `rgba(120,240,255,${0.3 * pulseVal})`; g.lineWidth = 0.5; g.shadowBlur = 0;
+    for (let sl = -CH/2+7; sl < CH/2-8; sl += 3) {
+      g.beginPath(); g.moveTo(-CW/2+7, sl); g.lineTo(CW/2-7, sl); g.stroke();
+    }
+    const dotColors = ['rgba(0,255,100,0.9)','rgba(255,200,0,0.85)','rgba(0,212,255,0.9)'];
+    for (let d = 0; d < 3; d++) {
+      g.beginPath(); g.arc(-CW/2+8+d*6, CH/2-5, 1.5, 0, Math.PI*2);
+      g.fillStyle = dotColors[d]; g.fill();
+    }
+    if (stationScrollOffset[stIdx] !== undefined) {
+      const ticker = '> exec... \u2588 read... \u2588 build... \u2588 write... \u2588 ';
+      g.font = '6px monospace';
+      const tickerW = g.measureText(ticker).width;
+      const sx = -CW/2+6, sy = -CH/2+5, sw = CW-12, sh = CH-12;
+      g.save();
+      g.beginPath(); rrPath(g, sx, sy, sw, sh, 2); g.clip();
+      g.fillStyle = agColor + 'd9'; g.textAlign = 'left'; g.textBaseline = 'middle';
+      const offset = stationScrollOffset[stIdx] % tickerW;
+      let tx = sx - offset;
+      while (tx < sx + sw) { g.fillText(ticker, tx, 0); tx += tickerW; }
+      g.restore();
+    }
+    g.fillStyle = 'rgba(10,30,60,0.85)'; g.font = 'bold 6px Courier New'; g.textAlign = 'center';
+    g.fillText('EXT', 0, CH/2-4);
+    g.restore();
+    g.shadowBlur = 0; g.shadowColor = 'transparent';
+    const glowRW = g.createRadialGradient(st.deskX, st.deskY, 0, st.deskX, st.deskY, 44);
+    glowRW.addColorStop(0,   'rgba(0,212,255,0.10)');
+    glowRW.addColorStop(0.5, 'rgba(0,180,255,0.05)');
+    glowRW.addColorStop(1,   'rgba(0,212,255,0)');
+    g.fillStyle = glowRW; g.beginPath(); g.arc(st.deskX, st.deskY, 44, 0, Math.PI*2); g.fill();
+  });
 }
 
 // ── Holographic center ring — at CX, CY ──
@@ -1382,7 +1457,7 @@ scene.add(fillLight);
 function perspScale(canvasY){ return .82+(canvasY/GH)*.36; }
 function hexColor(hex){ return new THREE.Color(parseInt(hex.replace('#',''),16)); }
 
-function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase) {
+function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase, provider) {
   const group = new THREE.Group();
   const threeX = canvasX, threeY = canvasY;
   const pscale = perspScale(canvasY);
@@ -1467,6 +1542,22 @@ function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase) {
   const shadowMesh=new THREE.Mesh(new THREE.CircleGeometry(base*.85,16),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.28}));
   shadowMesh.position.set(0,0,-base*.05); shadowMesh.scale.set(1,.4,1); group.add(shadowMesh);
 
+  // Antigravity Halo (Green)
+  if (provider === 'antigravity') {
+    const haloGeo = new THREE.TorusGeometry(base * 0.50, base * 0.08, 12, 32);
+    const haloMat = new THREE.MeshBasicMaterial({ 
+      color: 0x00ff00, 
+      transparent: false,
+      opacity: 1.0
+    });
+    const halo = new THREE.Mesh(haloGeo, haloMat);
+    halo.position.set(0, base * 0.12, base * 2.45);
+    halo.rotation.x = Math.PI / 2;
+    group.add(halo);
+    
+    console.warn("SPAWNING AGENT WITH HALO: ", provider);
+  }
+
   // Face toward monitor (XY rotation) + forward lean to counter scene 15° tilt
   const _qFace = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), faceAngle - Math.PI/2);
   const _tiltAxis = new THREE.Vector3(-Math.sin(faceAngle), Math.cos(faceAngle), 0);
@@ -1480,12 +1571,12 @@ function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase) {
 // ─────────────────────────────────────────────────────────
 //  GENIE BUILDER
 // ─────────────────────────────────────────────────────────
-function makeGenie(canvasX, canvasY) {
+function makeGenie(canvasX, canvasY, colorHex) {
   const group = new THREE.Group();
   const threeX=canvasX, threeY=canvasY;
   const pscale=perspScale(canvasY)*.858;
   const base=18*pscale;
-  const genieColor=new THREE.Color(0x818cf8);
+  const genieColor=new THREE.Color(colorHex || 0x818cf8);
 
   // Orb body
   const orb=new THREE.Mesh(new THREE.SphereGeometry(base*1.1,20,16),new THREE.MeshLambertMaterial({color:genieColor,transparent:true,opacity:.68,emissive:genieColor,emissiveIntensity:.22}));
@@ -1513,7 +1604,7 @@ function makeGenie(canvasX, canvasY) {
   }
 
   // Point light
-  const genieLight=new THREE.PointLight(0x6677ff,1.4,200);
+  const genieLight=new THREE.PointLight(genieColor, 1.4, 200);
   genieLight.position.set(0,0,base); group.add(genieLight);
 
   group.position.set(threeX, threeY, 0);
@@ -1541,7 +1632,7 @@ function updateLabels() {
     }
     const entry = penguinMap[item.agentKey];
     if (!entry) continue;
-    const st = stations[entry.stationIdx];
+    const st = getStation(entry.stationIdx);
     item.el.style.left = (st.labelX * sx) + 'px';
     item.el.style.top  = (st.labelY * sy) + 'px';
     item.el.style.transform = `translate(-50%,-50%) rotate(${st.labelAngleDeg}deg)`;
@@ -1556,11 +1647,13 @@ function spawnGenie(sessionId, session) {
   if (freeGenieSlots.length === 0) return;
   const slotIdx = freeGenieSlots.shift();
   const pos = GENIE_SLOTS[slotIdx];
-  const group = makeGenie(pos.x, pos.y);
+  const isAntigravity = sessionId.startsWith('antigravity_');
+  const color = isAntigravity ? 0xa78bfa : 0x818cf8;
+  const group = makeGenie(pos.x, pos.y, color);
   scene.add(group);
   const projectName = (session.cwd || '').split(/[\\/]/).filter(Boolean).pop() || 'workspace';
   const el = document.createElement('div');
-  el.className = 'role-label genie';
+  el.className = 'role-label genie' + (isAntigravity ? ' antigravity' : '');
   let displayName = projectName;
   if (displayName.toLowerCase() === 'vs + claude projects') displayName = 'workspace';
   if (displayName.length > 14) displayName = displayName.slice(0, 13) + '…';
@@ -1585,16 +1678,56 @@ function despawnGenie(sessionId) {
 // ═══════════════════════════════════════════════════════════
 //  SPAWN / DESPAWN PENGUINS
 // ═══════════════════════════════════════════════════════════
-function spawnPenguin(agentKey, agentType) {
-  if (penguinMap[agentKey]) return;
-  if (freeStations.length === 0) return;
+// Overflow wall desk positions — clockwise from top-right corner
+// Overflow desk positions — concentric rings inside the room, clockwise from upper-right.
+// Main 6 stations sit at radius=145 on angles −90°,−30°,30°,90°,150°,210°.
+// Ring 1 (r≈200): gap angles between main stations.
+// Ring 2 (r≈220–243): main station angles, smaller r toward bottom (CY=350, GH=560).
+const WALL_DESK_POSITIONS = (() => {
+  const entries = [
+    { a: -60, r: 205 }, { a: -30, r: 240 }, { a:   0, r: 205 },
+    { a:  30, r: 222 }, { a:  60, r: 180 }, { a:  90, r: 160 },
+    { a: 120, r: 180 }, { a: 150, r: 222 }, { a: 180, r: 205 },
+    { a: 210, r: 240 }, { a: 240, r: 205 }, { a: -90, r: 243 },
+  ];
+  return entries.map(({ a, r }) => {
+    const rad = a * Math.PI / 180;
+    return { x: Math.round(CX + r * Math.cos(rad)), y: Math.round(CY + r * Math.sin(rad)) };
+  });
+})();
 
-  const stationIdx = freeStations.shift();
-  const st = stations[stationIdx];
+function getStation(idx) {
+  if (idx < NUM_DESKS) return stations[idx];
+  const wp = WALL_DESK_POSITIONS[(idx - NUM_DESKS) % WALL_DESK_POSITIONS.length];
+  const deskX = wp.x, deskY = wp.y;
+  const angle = Math.atan2(deskY - CY, deskX - CX);  // outward from center
+  const dirX = Math.cos(angle), dirY = Math.sin(angle);
+  return {
+    id: idx, angle, dirX, dirY,
+    deskX, deskY,
+    chairX: deskX - dirX * 34,   // chair is 34px toward center from desk
+    chairY: deskY - dirY * 34,
+    labelX: deskX - dirX * 22,   // label on the inner side (toward center)
+    labelY: deskY - dirY * 22,
+    labelAngleDeg: 0,
+  };
+}
+
+function spawnPenguin(agentKey, agentType, provider) {
+  if (penguinMap[agentKey]) return;
+  
+  let stationIdx;
+  if (freeStations.length > 0) {
+    stationIdx = freeStations.shift();
+  } else {
+    stationIdx = Object.keys(penguinMap).length + freeStations.length;
+  }
+
+  const st = getStation(stationIdx);
   const c = agentColor(agentType);
   const phase = Object.keys(penguinMap).length * (Math.PI * 2 / 6);
 
-  const group = makePenguin(st.chairX, st.chairY, st.angle, c.fg, phase);
+  const group = makePenguin(st.chairX, st.chairY, st.angle, c.fg, phase, provider);
   group.userData.agentKey  = agentKey;
   group.userData.agentType = agentType;
   group.userData.stationId = stationIdx;
@@ -1608,7 +1741,7 @@ function spawnPenguin(agentKey, agentType) {
   // Label
   const el = document.createElement('div');
   el.className = 'role-label';
-  el.textContent = agentType;
+  el.textContent = (provider === 'antigravity' ? '🔥[AG] ' : '') + agentType;
   el.style.color = c.fg;
   el.style.borderColor = c.fg + '40';
   labelsDiv.appendChild(el);
@@ -1670,7 +1803,7 @@ function applyState(newState) {
     if (!newPenguinKeys.has(key)) despawnPenguin(key);
   }
   for (const penguin of (newState.active_penguins || [])) {
-    if (!penguinMap[penguin.key]) spawnPenguin(penguin.key, penguin.agent_type || 'general-purpose');
+    if (!penguinMap[penguin.key]) spawnPenguin(penguin.key, penguin.agent_type || 'general-purpose', penguin.provider);
   }
 
   // Track first active session started_at
@@ -2155,7 +2288,7 @@ function loop(timestamp) {
   floorShimmerT  = t * 0.001;
   holoRing.rotation  += holoRing.rotSpeed;
   holoRing.pulsePhase += holoRing.pulseSpeed;
-  for (const cp of consolePulse) cp.phase += cp.speed;
+  consolePulse.forEach(cp => { if (cp) cp.phase += cp.speed; });
 
   // Advance scroll offsets for WIP stations
   for (const entry of Object.values(penguinMap)) {
