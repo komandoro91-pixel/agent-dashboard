@@ -1453,7 +1453,7 @@ scene.add(fillLight);
 function perspScale(canvasY){ return .82+(canvasY/GH)*.36; }
 function hexColor(hex){ return new THREE.Color(parseInt(hex.replace('#',''),16)); }
 
-function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase, provider) {
+function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase, provider, agentType = '') {
   const group = new THREE.Group();
   const threeX = canvasX, threeY = canvasY;
   const pscale = perspScale(canvasY);
@@ -1539,7 +1539,7 @@ function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase, provider) {
   shadowMesh.position.set(0,0,-base*.05); shadowMesh.scale.set(1,.4,1); group.add(shadowMesh);
 
   // Gemini Scout ring (gold)
-  if (provider === 'gemini-scout') {
+  if (provider === 'gemini-scout' || agentType === 'gemini-scout') {
     const haloGeo = new THREE.TorusGeometry(base * 0.50, base * 0.06, 12, 32);
     const haloMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
     const halo = new THREE.Mesh(haloGeo, haloMat);
@@ -1715,7 +1715,7 @@ function spawnPenguin(agentKey, agentType, provider) {
   const c = agentColor(agentType);
   const phase = Object.keys(penguinMap).length * (Math.PI * 2 / 6);
 
-  const group = makePenguin(st.chairX, st.chairY, st.angle, c.fg, phase, provider);
+  const group = makePenguin(st.chairX, st.chairY, st.angle, c.fg, phase, provider, agentType);
   group.userData.agentKey  = agentKey;
   group.userData.agentType = agentType;
   group.userData.stationId = stationIdx;
