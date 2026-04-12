@@ -245,20 +245,29 @@ header{
   from{opacity:0;transform:translateX(-8px)}
   to{opacity:1;transform:translateX(0)}
 }
+@keyframes labelGlow{
+  0%,100%{box-shadow:0 0 6px rgba(129,140,248,.20),0 2px 8px rgba(0,0,0,.4)}
+  50%{box-shadow:0 0 14px rgba(129,140,248,.45),0 4px 12px rgba(0,0,0,.5)}
+}
 .role-label{
-  position:absolute;transform:translate(-50%,0);
-  background:rgba(7,7,14,.80);
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:4px;padding:2px 7px;
+  position:absolute;transform:translate(-50%,-50%);
+  background:rgba(7,7,14,.85);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;padding:3px 9px;
   font-size:9px;font-family:var(--mono);font-weight:700;
   letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;
-  backdrop-filter:blur(4px);
+  backdrop-filter:blur(6px);
+  pointer-events:none;
+  animation:labelGlow 3s ease-in-out infinite;
+  transition:opacity .3s;
 }
 .role-label.genie{
-  background:rgba(99,102,241,.18);
-  border-color:rgba(129,140,248,.40);
+  background:rgba(99,102,241,.22);
+  border-color:rgba(129,140,248,.50);
   color:var(--indigo);font-size:10px;
-  box-shadow:0 0 12px rgba(99,102,241,.25);
+  border-radius:20px;
+  z-index: 10;
+  pointer-events: none;
 }
 
 
@@ -1446,6 +1455,10 @@ scene.add(fillLight);
   scene.add(plane);
 }
 
+// Central genie lamp — created once
+const centralLamp = buildCentralLamp(CX, CY + 15);
+scene.add(centralLamp);
+
 // ─────────────────────────────────────────────────────────
 //  PENGUIN BUILDER
 // ─────────────────────────────────────────────────────────
@@ -1495,6 +1508,7 @@ function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase, provider, ag
 
   // Eyes
   const eyeR=base*.155, pupilR=base*.090, eyeOff=base*.22;
+  group.userData.eyeParts=[];
   for(const side of [-1,1]){
     const eyeMesh=new THREE.Mesh(new THREE.SphereGeometry(eyeR,10,8),new THREE.MeshLambertMaterial({color:eyeWhite}));
     eyeMesh.position.set(side*eyeOff,base*.30,base*2.02); group.add(eyeMesh);
@@ -1502,11 +1516,15 @@ function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase, provider, ag
     pupMesh.position.set(side*eyeOff*.88,base*.32,base*2.14); group.add(pupMesh);
     const glintMesh=new THREE.Mesh(new THREE.SphereGeometry(pupilR*.35,5,4),new THREE.MeshLambertMaterial({color:new THREE.Color(1,1,1)}));
     glintMesh.position.set(side*eyeOff*.78+.8,base*.35,base*2.18); group.add(glintMesh);
+    group.userData.eyeParts.push({eyeMesh, pupMesh, glintMesh, baseScaleY:1});
   }
 
   // Beak
   const beak=new THREE.Mesh(new THREE.ConeGeometry(base*.16,base*.38,8),new THREE.MeshLambertMaterial({color:beakColor}));
   beak.rotation.x=-Math.PI/2+.25; beak.position.set(0,base*.52,base*2.02); group.add(beak);
+  group.userData.beak=beak;
+  group.userData.beakBaseRotX=beak.rotation.x;
+  group.userData.beakBasePosZ=beak.position.z;
 
   // Flippers — arms resting forward on keyboard
   group.userData.flippers=[];
@@ -1521,6 +1539,7 @@ function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase, provider, ag
       mesh:flip, side,
       basePosZ: flip.position.z,
       baseRotX: flip.rotation.x,
+      baseRotZ: flip.rotation.z,
     });
   }
 
@@ -1560,45 +1579,249 @@ function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase, provider, ag
 // ─────────────────────────────────────────────────────────
 //  GENIE BUILDER
 // ─────────────────────────────────────────────────────────
-function makeGenie(canvasX, canvasY, colorHex) {
+function makeGenie(canvasX, canvasY, colorHex, sessionType) {
   const group = new THREE.Group();
-  const threeX=canvasX, threeY=canvasY;
-  const pscale=perspScale(canvasY)*.858;
-  const base=18*pscale;
-  const genieColor=new THREE.Color(colorHex || 0x818cf8);
+  const pscale = perspScale(canvasY) * 0.858;
+  const base = 18 * pscale;
 
-  // Orb body
-  const orb=new THREE.Mesh(new THREE.SphereGeometry(base*1.1,20,16),new THREE.MeshLambertMaterial({color:genieColor,transparent:true,opacity:.68,emissive:genieColor,emissiveIntensity:.22}));
-  orb.position.set(0,0,base*.2); orb.castShadow=true; group.add(orb);
+  const SIZE = 256;
+  const cvs = document.createElement('canvas');
+  cvs.width = SIZE; cvs.height = SIZE;
+  const ctx = cvs.getContext('2d');
 
-  // Core
-  const core=new THREE.Mesh(new THREE.SphereGeometry(base*.55,16,12),new THREE.MeshLambertMaterial({color:new THREE.Color(0xaab4ff),transparent:true,opacity:.85,emissive:new THREE.Color(0x6677ff),emissiveIntensity:.55}));
-  core.position.set(0,0,base*.2); group.add(core);
+  // Body — genie cone/drop shape, wider at top, tapering to tail
+  const bodyGrad = ctx.createRadialGradient(115,140,5,128,150,62);
+  bodyGrad.addColorStop(0,'#8ecfe8');
+  bodyGrad.addColorStop(1,'#3a7bd5');
+  // Main body ellipse
+  ctx.beginPath(); ctx.ellipse(128,150,58,52,0,0,Math.PI*2);
+  ctx.fillStyle=bodyGrad; ctx.fill();
+  // Taper to tail: draw a narrowing path below
+  ctx.beginPath();
+  ctx.moveTo(86,175); ctx.quadraticCurveTo(128,215,170,175);
+  ctx.quadraticCurveTo(155,165,128,160); ctx.quadraticCurveTo(101,165,86,175);
+  ctx.fillStyle=bodyGrad; ctx.fill();
 
-  // Head
-  const head=new THREE.Mesh(new THREE.SphereGeometry(base*.72,16,14),new THREE.MeshLambertMaterial({color:genieColor,transparent:true,opacity:.80,emissive:genieColor,emissiveIntensity:.15}));
-  head.position.set(0,0,base*1.65); group.add(head);
+  const highlight = ctx.createRadialGradient(105,135,2,128,150,58);
+  highlight.addColorStop(0,'rgba(255,255,255,0.32)');
+  highlight.addColorStop(0.5,'rgba(255,255,255,0)');
+  ctx.beginPath(); ctx.ellipse(128,150,58,52,0,0,Math.PI*2);
+  ctx.fillStyle=highlight; ctx.fill();
 
-  // Eyes
-  for(const side of [-1,1]){
-    const eye=new THREE.Mesh(new THREE.SphereGeometry(base*.14,8,6),new THREE.MeshLambertMaterial({color:new THREE.Color(0xffffff),emissive:new THREE.Color(0xaabbff),emissiveIntensity:.8}));
-    eye.position.set(side*base*.26,base*.22,base*2.20); group.add(eye);
+  ctx.beginPath(); ctx.ellipse(128,172,46,10,0,0,Math.PI*2);
+  ctx.fillStyle='#fbbf24'; ctx.fill();
+  ctx.beginPath(); ctx.arc(128,172,7,0,Math.PI*2);
+  ctx.fillStyle='#7c3aed'; ctx.fill();
+
+  // Arms — wide wavy outgrowths from sides of body
+  const lArmGrad=ctx.createRadialGradient(90,138,2,75,135,28);
+  lArmGrad.addColorStop(0,'#8ecfe8'); lArmGrad.addColorStop(1,'#3a7bd5');
+  // Left arm
+  ctx.beginPath();
+  ctx.moveTo(80,140); ctx.quadraticCurveTo(52,128,35,115);
+  ctx.quadraticCurveTo(28,130,35,138); ctx.quadraticCurveTo(55,148,82,155);
+  ctx.fillStyle=lArmGrad; ctx.fill();
+  ctx.beginPath(); ctx.arc(35,115,12,0,Math.PI*2);
+  ctx.fillStyle='#6ab8d8'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(35,115,12,5,0.3,0,Math.PI*2);
+  ctx.strokeStyle='#fbbf24'; ctx.lineWidth=3; ctx.stroke();
+  // Right arm
+  const rArmGrad=ctx.createRadialGradient(166,138,2,181,135,28);
+  rArmGrad.addColorStop(0,'#8ecfe8'); rArmGrad.addColorStop(1,'#3a7bd5');
+  ctx.beginPath();
+  ctx.moveTo(176,140); ctx.quadraticCurveTo(204,128,221,115);
+  ctx.quadraticCurveTo(228,130,221,138); ctx.quadraticCurveTo(201,148,174,155);
+  ctx.fillStyle=rArmGrad; ctx.fill();
+  ctx.beginPath(); ctx.arc(221,115,12,0,Math.PI*2);
+  ctx.fillStyle='#6ab8d8'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(221,115,12,5,-0.3,0,Math.PI*2);
+  ctx.strokeStyle='#fbbf24'; ctx.lineWidth=3; ctx.stroke();
+
+  // Head — smaller
+  const headGrad = ctx.createRadialGradient(120,108,4,128,115,38);
+  headGrad.addColorStop(0,'#c5dff0');
+  headGrad.addColorStop(1,'#5a96ba');
+  ctx.beginPath(); ctx.arc(128,115,38,0,Math.PI*2);
+  ctx.fillStyle=headGrad; ctx.fill();
+  ctx.beginPath(); ctx.arc(128,115,38,0,Math.PI*2);
+  ctx.strokeStyle='rgba(60,130,180,0.7)'; ctx.lineWidth=3; ctx.stroke();
+
+  // Mouth — friendly smile arc
+  ctx.beginPath(); ctx.arc(128,128,14,0.2,Math.PI-0.2);
+  ctx.strokeStyle='#0d0d20'; ctx.lineWidth=4; ctx.lineCap='round'; ctx.stroke();
+
+  function drawEyes(c, closed, active) {
+    const browY = active ? 88 : 94;
+
+    if (closed) {
+      // Закрытые глаза — простые дуги цвета кожи
+      c.beginPath();
+      c.arc(111, 112, 10, Math.PI, 0);
+      c.strokeStyle = '#2a5a8a';
+      c.lineWidth = 3.5;
+      c.lineCap = 'round';
+      c.stroke();
+
+      c.beginPath();
+      c.arc(145, 112, 10, Math.PI, 0);
+      c.strokeStyle = '#2a5a8a';
+      c.lineWidth = 3.5;
+      c.stroke();
+    } else {
+      // Открытые глаза — органичные, без белого фона
+      // Левый глаз
+      // Радужка на фоне лица
+      const irisR = active ? 11 : 10;
+      c.beginPath();
+      c.arc(111, 112, irisR + 2, 0, Math.PI * 2);
+      c.fillStyle = 'rgba(15, 50, 100, 0.7)'; // тёмная глазница
+      c.fill();
+
+      c.beginPath();
+      c.arc(111, 112, irisR, 0, Math.PI * 2);
+      c.fillStyle = '#2e7fc0'; // радужка
+      c.fill();
+
+      c.beginPath();
+      c.arc(111, 112, irisR - 3, 0, Math.PI * 2);
+      c.fillStyle = '#0a0a1a'; // зрачок
+      c.fill();
+
+      c.beginPath();
+      c.arc(108, 109, 2.5, 0, Math.PI * 2);
+      c.fillStyle = 'rgba(255,255,255,0.75)'; // блик
+      c.fill();
+
+      // Правый глаз
+      c.beginPath();
+      c.arc(145, 112, irisR + 2, 0, Math.PI * 2);
+      c.fillStyle = 'rgba(15, 50, 100, 0.7)';
+      c.fill();
+
+      c.beginPath();
+      c.arc(145, 112, irisR, 0, Math.PI * 2);
+      c.fillStyle = '#2e7fc0';
+      c.fill();
+
+      c.beginPath();
+      c.arc(145, 112, irisR - 3, 0, Math.PI * 2);
+      c.fillStyle = '#0a0a1a';
+      c.fill();
+
+      c.beginPath();
+      c.arc(142, 109, 2.5, 0, Math.PI * 2);
+      c.fillStyle = 'rgba(255,255,255,0.75)';
+      c.fill();
+    }
+
+    // Брови
+    c.beginPath();
+    c.moveTo(98, browY);
+    c.quadraticCurveTo(111, browY - 7, 124, browY);
+    c.strokeStyle = '#0d0d20';
+    c.lineWidth = 5;
+    c.lineCap = 'round';
+    c.stroke();
+
+    c.beginPath();
+    c.moveTo(132, browY);
+    c.quadraticCurveTo(145, browY - 7, 160, browY);
+    c.stroke();
   }
 
-  // Smoke tail
-  for(let ti=0;ti<4;ti++){
-    const tr=base*(.9-ti*.18);
-    const seg=new THREE.Mesh(new THREE.CylinderGeometry(tr*.7,tr,base*.5,10),new THREE.MeshLambertMaterial({color:genieColor,transparent:true,opacity:.45-ti*.09,emissive:genieColor,emissiveIntensity:.12}));
-    seg.position.set(0,0,-(ti+.5)*base*.52); seg.rotation.x=Math.PI/2; group.add(seg);
-  }
+  drawEyes(ctx, false, false);
 
-  // Point light
-  const genieLight=new THREE.PointLight(genieColor, 1.4, 200);
-  genieLight.position.set(0,0,base); group.add(genieLight);
+  // Turban — adjusted for smaller head (radius 38)
+  const turbBase = sessionType === 'cli' ? '#15803d' : '#b45309';
+  const turbLight = sessionType === 'cli' ? '#4ade80' : '#fcd34d';
+  const turbGrad=ctx.createRadialGradient(128,68,4,128,76,48);
+  turbGrad.addColorStop(0,turbLight);
+  turbGrad.addColorStop(1,turbBase);
+  ctx.beginPath();
+  ctx.moveTo(84,82); ctx.quadraticCurveTo(66,54,128,38); ctx.quadraticCurveTo(190,54,172,82);
+  ctx.quadraticCurveTo(152,72,128,74); ctx.quadraticCurveTo(104,72,84,82);
+  ctx.fillStyle=turbGrad; ctx.fill();
 
-  group.position.set(threeX, threeY, 0);
-  group.userData.baseY=threeY; group.userData.base=base;
-  group.userData.orb=orb; group.userData.core=core;
+  ctx.beginPath(); ctx.ellipse(128,82,44,10,0,0,Math.PI*2);
+  const bandGrad=ctx.createLinearGradient(84,82,172,82);
+  bandGrad.addColorStop(0,turbBase); bandGrad.addColorStop(0.5,turbLight); bandGrad.addColorStop(1,turbBase);
+  ctx.fillStyle=bandGrad; ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(88,70); ctx.quadraticCurveTo(128,46,168,70);
+  ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=3; ctx.stroke();
+
+  ctx.beginPath(); ctx.arc(128,72,10,0,Math.PI*2);
+  ctx.fillStyle='#f87171';
+  ctx.shadowColor='#ff4444'; ctx.shadowBlur=8;
+  ctx.fill(); ctx.shadowBlur=0;
+
+  ctx.beginPath(); ctx.arc(124,68,4,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.fill();
+
+  const tex = new THREE.CanvasTexture(cvs);
+  const geo = new THREE.PlaneGeometry(base * 4, base * 4);
+  const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, side: THREE.DoubleSide });
+  const plane = new THREE.Mesh(geo, mat);
+  plane.rotation.x = THREE.MathUtils.degToRad(15);
+  plane.rotation.z = Math.PI;
+  plane.position.set(0, 0, base * 1.5);
+  group.add(plane);
+
+  const tailColor = new THREE.Color(0x8ab4d4);
+  const tailPositions = [
+    {x:0, y:0, z:-base*0.5, r:0.55},
+    {x:base*0.15, y:0, z:-base*1.0, r:0.42},
+    {x:-base*0.1, y:0, z:-base*1.5, r:0.32},
+    {x:base*0.12, y:0, z:-base*1.95, r:0.22},
+    {x:-base*0.08, y:0, z:-base*2.3, r:0.13},
+  ];
+  const tailSegs = [];
+  tailPositions.forEach((tp, i) => {
+    const seg = new THREE.Mesh(
+      new THREE.SphereGeometry(base * tp.r, 10, 8),
+      new THREE.MeshLambertMaterial({color: tailColor, transparent: true, opacity: 0.65 - i*0.12, emissive: tailColor, emissiveIntensity: 0.1})
+    );
+    seg.scale.z = 0.45;
+    seg.position.set(tp.x, tp.y, tp.z);
+    group.add(seg);
+    tailSegs.push({mesh: seg, baseX: tp.x, idx: i});
+  });
+
+  const gl = new THREE.PointLight(new THREE.Color(colorHex || 0xa8c0d6), 1.4, 180);
+  gl.position.set(0, 0, base * 1.5);
+  group.add(gl);
+
+  const shadow = null; // removed floor shadow
+
+  const sparkColors = [0x60a5fa, 0xfbbf24, 0xa78bfa, 0x34d399];
+  const sparks = [];
+  sparkColors.forEach((c, i) => {
+    const spark = new THREE.Mesh(
+      new THREE.SphereGeometry(base * 0.08, 6, 5),
+      new THREE.MeshLambertMaterial({color: new THREE.Color(c), emissive: new THREE.Color(c), emissiveIntensity: 1.2, transparent: true, opacity: 0.9})
+    );
+    group.add(spark);
+    sparks.push({mesh: spark, color: c, phase: i * Math.PI * 0.5, orbitR: base * (1.8 + i * 0.4), orbitZ: base * (0.5 + i * 0.35), speed: 1.2 + i * 0.3});
+  });
+
+  group.position.set(canvasX, canvasY, 0);
+  group.userData.baseY = canvasY;
+  group.userData.base = base;
+  group.userData.orb = plane;
+  group.userData.core = plane;
+  group.userData.tailSegs = tailSegs;
+  group.userData.cvs = cvs;
+  group.userData.ctx = ctx;
+  group.userData.tex = tex;
+  group.userData.drawEyes = drawEyes;
+  group.userData.blinkTimer = 3 + Math.random() * 4;
+  group.userData.blinkState = 'open';
+  group.userData.isActive = false;
+  group.userData.sessionType = sessionType;
+  group.userData.shadow = shadow;
+  group.userData.sparks = sparks;
+
   return group;
 }
 
@@ -1610,22 +1833,160 @@ let labelEls = []; // [{el, agentKey?} | {el, genieKey?}]
 
 function updateLabels() {
   const sx = scaleRatio, sy = scaleRatio;
+  const t = Date.now() / 1000;
+  let gi = 0, pi = 0;
   for (const item of labelEls) {
     if (item.genieKey) {
       const ge = genieMap[item.genieKey];
       if (!ge) continue;
       const pos = GENIE_SLOTS[ge.slotIdx];
+      const bob = Math.sin(t * 0.9 + gi * 1.4) * 5;
       item.el.style.left = (pos.x * sx) + 'px';
-      item.el.style.top  = ((pos.y - 46) * sy) + 'px';
+      item.el.style.top = ((pos.y - 58 + bob) * sy) + 'px';
+      item.el.style.transform = 'translate(-50%,-50%)';
+      gi++;
       continue;
     }
     const entry = penguinMap[item.agentKey];
     if (!entry) continue;
     const st = getStation(entry.stationIdx);
+    const bob = Math.sin(t * 0.85 + pi * 1.7) * 4;
     item.el.style.left = (st.labelX * sx) + 'px';
-    item.el.style.top  = (st.labelY * sy) + 'px';
+    item.el.style.top  = ((st.labelY + bob) * sy) + 'px';
     item.el.style.transform = `translate(-50%,-50%) rotate(${st.labelAngleDeg}deg)`;
+    pi++;
   }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CENTRAL LAMP — one large lamp at scene center
+// ═══════════════════════════════════════════════════════════
+function buildCentralLamp(cx, cy) {
+  const lg = new THREE.Group();
+  lg.position.set(cx, cy, 0);
+
+  // 2D canvas — силуэт лампы Аладдина (носик вверх)
+  const W = 200, H = 170;
+  const cvs = document.createElement('canvas');
+  cvs.width = W; cvs.height = H;
+  const c = cvs.getContext('2d');
+
+  // Свечение фона (смещено вниз под тело)
+  const glowGrad = c.createRadialGradient(95, 105, 5, 95, 105, 65);
+  glowGrad.addColorStop(0, 'rgba(255,190,30,0.30)');
+  glowGrad.addColorStop(1, 'rgba(255,140,0,0)');
+  c.fillStyle = glowGrad; c.fillRect(0, 0, W, H);
+
+  // Основание — ножка
+  c.beginPath(); c.ellipse(95, 148, 20, 5, 0, 0, Math.PI*2);
+  const baseG = c.createLinearGradient(75,148,115,148);
+  baseG.addColorStop(0,'#7a4d05'); baseG.addColorStop(0.5,'#d4900a'); baseG.addColorStop(1,'#7a4d05');
+  c.fillStyle = baseG; c.fill();
+
+  // Шейка
+  c.beginPath(); c.ellipse(95, 136, 7, 5, 0, 0, Math.PI*2);
+  c.fillStyle = '#b07808'; c.fill();
+
+  // Корпус — широкий эллипс
+  c.beginPath(); c.ellipse(95, 110, 40, 22, 0, 0, Math.PI*2);
+  const bodyG = c.createRadialGradient(80, 98, 3, 95, 110, 44);
+  bodyG.addColorStop(0,'#ffe07a'); bodyG.addColorStop(0.4,'#d4900a'); bodyG.addColorStop(1,'#7a4d05');
+  c.fillStyle = bodyG; c.fill();
+  c.strokeStyle = 'rgba(255,200,50,0.5)'; c.lineWidth = 1.5; c.stroke();
+
+  // Блик
+  c.beginPath(); c.ellipse(78, 99, 14, 7, -0.4, 0, Math.PI*2);
+  c.fillStyle = 'rgba(255,255,220,0.28)'; c.fill();
+
+  // Носик — из корпуса круто вверх
+  c.beginPath();
+  c.moveTo(116, 100); c.bezierCurveTo(122, 78, 122, 54, 118, 36);
+  c.lineWidth = 6; c.strokeStyle = '#b07808'; c.lineCap = 'round'; c.stroke();
+  c.beginPath();
+  c.moveTo(116, 100); c.bezierCurveTo(122, 78, 122, 54, 118, 36);
+  c.lineWidth = 3; c.strokeStyle = '#f0b020'; c.stroke();
+  // Кончик носика
+  c.beginPath(); c.arc(118, 33, 3.5, 0, Math.PI*2);
+  c.fillStyle = '#f0b020'; c.fill();
+
+  // Ручка — слева
+  c.beginPath(); c.arc(58, 110, 17, Math.PI*0.45, Math.PI*1.55);
+  c.lineWidth = 8; c.strokeStyle = '#8b5e0a'; c.lineCap = 'butt'; c.stroke();
+  c.beginPath(); c.arc(58, 110, 17, Math.PI*0.45, Math.PI*1.55);
+  c.lineWidth = 4; c.strokeStyle = '#d4aa20'; c.stroke();
+
+  // Дымок из носика — синие шарики
+  [[118,27,4,0.75],[115,20,3,0.55],[120,14,2.5,0.35]].forEach(([x,y,r,op]) => {
+    c.beginPath(); c.arc(x,y,r,0,Math.PI*2);
+    c.fillStyle = `rgba(96,165,250,${op})`; c.fill();
+  });
+
+  const tex = new THREE.CanvasTexture(cvs);
+  const plane = new THREE.Mesh(
+    new THREE.PlaneGeometry(62, 52),
+    new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, side: THREE.DoubleSide })
+  );
+  plane.rotation.x = THREE.MathUtils.degToRad(12);
+  plane.rotation.z = Math.PI;
+  lg.add(plane);
+
+  // Анимируемый дым-шар у кончика носика
+  const smoke = new THREE.Mesh(
+    new THREE.SphereGeometry(3, 8, 6),
+    new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.5 })
+  );
+  smoke.position.set(18, 8, 8);
+  lg.add(smoke);
+  lg.userData.smoke = smoke;
+
+  // Свет
+  const lampLight = new THREE.PointLight(0xffaa00, 1.5, 160);
+  lg.add(lampLight);
+  lg.userData.lampLight = lampLight;
+
+  return lg;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LAMP BUILDER (standalone, placed next to genie on scene)
+// ═══════════════════════════════════════════════════════════
+function buildLamp(cx, cy, pscale) {
+  const base = 18 * pscale * 0.858;
+  const lg = new THREE.Group();
+  lg.position.set(cx, cy, 0);
+
+  const body = new THREE.Mesh(
+    new THREE.SphereGeometry(base*0.9, 12, 8),
+    new THREE.MeshLambertMaterial({color:0xc8860a, emissive:0x8b5e0a, emissiveIntensity:0.4})
+  );
+  body.scale.set(1.4, 0.55, 0.9);
+  lg.add(body);
+
+  const spout = new THREE.Mesh(
+    new THREE.CylinderGeometry(base*0.10, base*0.18, base*0.65, 8),
+    new THREE.MeshLambertMaterial({color:0xd4940c})
+  );
+  spout.rotation.z = -Math.PI/3;
+  spout.position.set(base*0.8, 0, base*0.18);
+  lg.add(spout);
+
+  const handle = new THREE.Mesh(
+    new THREE.TorusGeometry(base*0.32, base*0.07, 6, 12, Math.PI),
+    new THREE.MeshLambertMaterial({color:0xc8860a})
+  );
+  handle.position.set(-base*0.65, 0, base*0.12);
+  handle.rotation.y = Math.PI/2;
+  lg.add(handle);
+
+  const glow = new THREE.Mesh(
+    new THREE.SphereGeometry(base*0.22, 8, 6),
+    new THREE.MeshBasicMaterial({color:0x60a5fa, transparent:true, opacity:0.5})
+  );
+  glow.position.set(base*1.25, 0, base*0.55);
+  lg.add(glow);
+  lg.userData.glow = glow;
+
+  return lg;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1636,8 +1997,11 @@ function spawnGenie(sessionId, session) {
   if (freeGenieSlots.length === 0) return;
   const slotIdx = freeGenieSlots.shift();
   const pos = GENIE_SLOTS[slotIdx];
-  const group = makeGenie(pos.x, pos.y, 0x818cf8);
+  const group = makeGenie(pos.x, pos.y, 0x818cf8, session.session_type || 'vscode');
   scene.add(group);
+  group.scale.set(0.01, 0.01, 0.01);
+  group.userData.spawning = true;
+  group.userData.spawnProgress = 0;
   const projectName = (session.cwd || '').split(/[\\/]/).filter(Boolean).pop() || 'workspace';
   const el = document.createElement('div');
   el.className = 'role-label genie';
@@ -1689,18 +2053,21 @@ function getStation(idx) {
   const deskX = wp.x, deskY = wp.y;
   const angle = Math.atan2(deskY - CY, deskX - CX);  // outward from center
   const dirX = Math.cos(angle), dirY = Math.sin(angle);
+  const perpAngle = Math.atan2(dirX, -dirY);
+  const labelAngle = perpAngle > Math.PI / 2 ? perpAngle - Math.PI :
+                     perpAngle < -Math.PI / 2 ? perpAngle + Math.PI : perpAngle;
   return {
     id: idx, angle, dirX, dirY,
     deskX, deskY,
-    chairX: deskX - dirX * 34,   // chair is 34px toward center from desk
+    chairX: deskX - dirX * 34,
     chairY: deskY - dirY * 34,
-    labelX: deskX - dirX * 22,   // label on the inner side (toward center)
-    labelY: deskY - dirY * 22,
-    labelAngleDeg: 0,
+    labelX: deskX + dirX * 16,
+    labelY: deskY + dirY * 16,
+    labelAngleDeg: labelAngle * 180 / Math.PI,
   };
 }
 
-function spawnPenguin(agentKey, agentType, provider) {
+function spawnPenguin(agentKey, agentType, provider, sessionId) {
   if (penguinMap[agentKey]) return;
   
   let stationIdx;
@@ -1718,6 +2085,9 @@ function spawnPenguin(agentKey, agentType, provider) {
   group.userData.agentKey  = agentKey;
   group.userData.agentType = agentType;
   group.userData.stationId = stationIdx;
+  group.userData.idleState = 'working';
+  group.userData.idleTimer = 8 + Math.random() * 4;
+  group.userData.idlePhase = 0;
   scene.add(group);
 
   // Point light for this station
@@ -1737,7 +2107,7 @@ function spawnPenguin(agentKey, agentType, provider) {
   stationColorMap[stationIdx] = c.fg;
   bgDirty = true;
 
-  penguinMap[agentKey] = { group, stationIdx, labelEl: el, pointLight: pl, spawnedAt: Date.now() };
+  penguinMap[agentKey] = { group, stationIdx, labelEl: el, pointLight: pl, spawnedAt: Date.now(), sessionId };
 }
 
 const MIN_ALIVE_MS = 30_000; // 30 seconds minimum visibility
@@ -1790,7 +2160,7 @@ function applyState(newState) {
     if (!newPenguinKeys.has(key)) despawnPenguin(key);
   }
   for (const penguin of (newState.active_penguins || [])) {
-    if (!penguinMap[penguin.key]) spawnPenguin(penguin.key, penguin.agent_type || 'general-purpose', penguin.provider);
+    if (!penguinMap[penguin.key]) spawnPenguin(penguin.key, penguin.agent_type || 'general-purpose', penguin.provider, penguin.session_id);
   }
 
   // Track first active session started_at
@@ -2064,9 +2434,9 @@ function drawGenieOrbitCards(g) {
       ? agents.slice(0, 4).map(ag => {
           const type = (ag.agent_type || 'agent').replace(/-/g, ' ');
           const desc = ag.description || '';
-          return { text: desc ? `${type}: ${desc}` : type, scrolling: desc.length > 8 };
+          return { text: desc ? `${type}: ${desc}` : type, scrolling: desc.length > 8, agentType: ag.agent_type || ag.type || 'general-purpose' };
         })
-      : [{ text: projectName, scrolling: false }];
+      : [{ text: projectName, scrolling: false, agentType: null }];
 
     const CARD_W = hasAgents ? AGENT_W : PILL_W;
     const CARD_H = hasAgents ? AGENT_H : PILL_H;
@@ -2094,6 +2464,10 @@ function drawGenieOrbitCards(g) {
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
+      const itemFg = item.agentType ? agentColor(item.agentType).fg : null;
+      const itemBorder = itemFg ? itemFg + '40' : border;
+      const itemText = itemFg || textC;
+      const itemDot = itemFg || dot;
       const angle = angles[i] !== undefined ? angles[i] : (i * Math.PI * 2 / items.length);
       const cx = pos.x + Math.cos(angle) * ORBIT_R;
       const cy = pos.y + Math.sin(angle) * ORBIT_R;
@@ -2125,12 +2499,12 @@ function drawGenieOrbitCards(g) {
       rrPath(g, 0, 0, CARD_W, CARD_H, CARD_H / 2);
       g.fillStyle = bg;
       g.fill();
-      g.strokeStyle = border;
+      g.strokeStyle = itemBorder;
       g.lineWidth = 0.9;
       g.stroke();
 
       // Dot indicator (left side)
-      g.fillStyle = dot;
+      g.fillStyle = itemDot;
       g.beginPath();
       g.arc(7, CARD_H / 2, 2.5, 0, Math.PI * 2);
       g.fill();
@@ -2155,7 +2529,7 @@ function drawGenieOrbitCards(g) {
         tx = 12 - (ge.cardScrollOffset[i] % (textW + 30));
       }
 
-      g.fillStyle = textC;
+      g.fillStyle = itemText;
       g.fillText(item.text, tx, CARD_H - 4);
       g.restore();
 
@@ -2205,11 +2579,121 @@ function animate3D() {
         mesh.position.z = baseZ + Math.max(0, tap) * 6;
       }
     }
+
+    // Idle animations (blinking, yawning, stretching)
+    const ud = p.userData;
+    if (ud.idleState !== undefined) {
+      const aliveSec = (Date.now() - (entry.spawnedAt || Date.now())) / 1000;
+
+      // Countdown to next idle trigger
+      if (ud.idleTimer > 0) {
+        ud.idleTimer -= 1/60;
+      }
+
+      // Start a new idle animation when timer fires
+      if (ud.idleTimer <= 0 && ud.idleState === 'working') {
+        if (aliveSec > 60) {
+          const r = Math.random();
+          ud.idleState = r < 0.4 ? 'stretching' : r < 0.7 ? 'yawning' : 'blinking';
+        } else if (aliveSec > 30) {
+          ud.idleState = Math.random() < 0.5 ? 'yawning' : 'blinking';
+        } else if (aliveSec > 10) {
+          ud.idleState = 'blinking';
+        } else {
+          ud.idleTimer = 6 + Math.random() * 8;
+        }
+        if (ud.idleState !== 'working') ud.idlePhase = 0;
+      }
+
+      // Run active idle animation
+      if (ud.idleState !== 'working') {
+        ud.idlePhase += 1/60;
+        const ip = ud.idlePhase;
+
+        // Eye scale for blinking/yawning
+        // phase 0..0.15 = close, 0.15..0.45 = closed, 0.45..0.6 = open
+        if (ud.eyeParts) {
+          let eyeScaleY = 1;
+          if (ud.idleState === 'blinking') {
+            if (ip < 0.15) eyeScaleY = 1 - ip/0.15;
+            else if (ip < 0.45) eyeScaleY = 0.05;
+            else if (ip < 0.6) eyeScaleY = 0.05 + (ip-0.45)/0.15 * 0.95;
+          } else if (ud.idleState === 'yawning') {
+            // Eyes half-closed throughout yawn (0..1.2s)
+            if (ip < 0.2) eyeScaleY = 1 - ip/0.2 * 0.6;
+            else if (ip < 1.0) eyeScaleY = 0.4;
+            else if (ip < 1.2) eyeScaleY = 0.4 + (ip-1.0)/0.2 * 0.6;
+          }
+          for (const ep of ud.eyeParts) {
+            ep.eyeMesh.scale.y = eyeScaleY;
+            ep.pupMesh.scale.y = eyeScaleY;
+            ep.glintMesh.scale.y = eyeScaleY;
+          }
+        }
+
+        // Beak for yawning: rotate open and back
+        if (ud.beak) {
+          let beakExtra = 0;
+          if (ud.idleState === 'yawning') {
+            // open beak: rotate x more negative (opens down), peak at ip=0.6
+            const openAmt = Math.sin(Math.min(ip / 1.0, 1) * Math.PI) * 0.55;
+            beakExtra = openAmt;
+          }
+          ud.beak.rotation.x = ud.beakBaseRotX - beakExtra;
+          ud.beak.position.z = ud.beakBasePosZ - beakExtra * 1.5;
+        }
+
+        // Stretching: raise flippers
+        if (ud.idleState === 'stretching' && ud.flippers) {
+          const liftAmt = Math.sin(Math.min(ip / 1.5, 1) * Math.PI) * 1.1;
+          for (const fb of ud.flippers) {
+            fb.mesh.rotation.z = fb.baseRotZ - liftAmt * fb.side;
+            fb.mesh.rotation.x = fb.baseRotX - liftAmt * 0.6;
+          }
+        }
+
+        // End of animation: reset and schedule next
+        if (ip >= 1.5) {
+          ud.idleState = 'working';
+          ud.idleTimer = 6 + Math.random() * 8;
+          // Reset eyes
+          if (ud.eyeParts) {
+            for (const ep of ud.eyeParts) {
+              ep.eyeMesh.scale.y = 1;
+              ep.pupMesh.scale.y = 1;
+              ep.glintMesh.scale.y = 1;
+            }
+          }
+          // Reset beak
+          if (ud.beak) {
+            ud.beak.rotation.x = ud.beakBaseRotX;
+            ud.beak.position.z = ud.beakBasePosZ;
+          }
+          // Reset flippers
+          if (ud.flippers) {
+            for (const fb of ud.flippers) {
+              fb.mesh.rotation.z = fb.baseRotZ;
+              fb.mesh.rotation.x = fb.baseRotX;
+            }
+          }
+        }
+      }
+    }
   }
   // Genies float + rotate + pulse — три уровня интенсивности
   const nowSec = Date.now() / 1000;
   for (const [sid, ge] of Object.entries(genieMap)) {
     const g = ge.group;
+
+    if (g.userData.spawning) {
+      g.userData.spawnProgress = Math.min(1, g.userData.spawnProgress + 0.04);
+      const ease = 1 - Math.pow(1 - g.userData.spawnProgress, 3);
+      const s = 0.01 + ease * 0.99;
+      g.scale.set(s, s, s);
+      if (g.userData.spawnProgress >= 1) g.userData.spawning = false;
+      continue;
+    }
+
     const agents = ge.activeAgents || [];
     const sd = ge.sessionData || {};
     const recentActivity = sd.last_event_ts && (nowSec - sd.last_event_ts) < 60;
@@ -2242,9 +2726,16 @@ function animate3D() {
       orbEmivBoost = 0.3;
     }
 
-    g.position.z = Math.sin(t * floatSpeed) * floatAmp;
+    g.position.z = Math.sin(t * floatSpeed + ge.slotIdx * 1.3) * floatAmp;
     g.position.y = g.userData.baseY + Math.sin(t * floatYSpeed) * floatYAmp;
-    g.rotation.z += rotSpeed;
+    g.rotation.z = Math.sin(t * 0.7 + ge.slotIdx * 2.1) * 0.08;
+
+    if (g.userData.orb) g.userData.orb.rotation.y = Math.sin(t * 0.5 + ge.slotIdx) * 0.15;
+
+    const activePenguins = Object.values(penguinMap).filter(p => p.sessionId === sid).length;
+    const targetScale = activePenguins > 0 ? 1.15 + Math.sin(t * 2.5) * 0.06 : 1.0;
+    g.scale.x += (targetScale - g.scale.x) * 0.05;
+    g.scale.y = g.scale.x;
 
     const pulse = pulseBase + Math.sin(t * pulseSpeed) * pulseAmp;
     if (g.userData.orb) {
@@ -2258,6 +2749,62 @@ function animate3D() {
     }
     const gl = g.children.find(c => c.isLight);
     if (gl) gl.intensity = lightBase + Math.sin(t * lightSpeed) * lightAmp;
+
+    if (g.userData.tailSegs) {
+      for (const ts of g.userData.tailSegs) {
+        ts.mesh.position.x = ts.baseX + Math.sin(t * 0.9 + ge.slotIdx * 1.7 + ts.idx * 0.8) * g.userData.base * 0.08;
+      }
+    }
+
+    const ud = g.userData;
+    const prevBlinkState = ud.blinkState;
+    ud.blinkTimer -= 1/60;
+    if (ud.blinkState === 'open' && ud.blinkTimer <= 0) {
+      ud.blinkState = 'closing';
+      ud.blinkTimer = 0.07;
+    } else if (ud.blinkState === 'closing' && ud.blinkTimer <= 0) {
+      ud.blinkState = 'closed';
+      ud.blinkTimer = 0.08;
+    } else if (ud.blinkState === 'closed' && ud.blinkTimer <= 0) {
+      ud.blinkState = 'opening';
+      ud.blinkTimer = 0.07;
+    } else if (ud.blinkState === 'opening' && ud.blinkTimer <= 0) {
+      ud.blinkState = 'open';
+      ud.blinkTimer = 3 + Math.random() * 4;
+    }
+    const needsRedraw = (ud.blinkState !== 'open') || (prevBlinkState !== ud.blinkState);
+    if (needsRedraw && ud.ctx) {
+      const ctx2 = ud.ctx;
+      // Восстановить фон головы в области глаз/бровей/рта
+      const hg = ctx2.createRadialGradient(120,108,4,128,115,38);
+      hg.addColorStop(0,'#c5dff0');
+      hg.addColorStop(1,'#5a96ba');
+      ctx2.save();
+      ctx2.beginPath(); ctx2.rect(85, 68, 145, 80); ctx2.clip();
+      ctx2.beginPath(); ctx2.arc(128,115,38,0,Math.PI*2);
+      ctx2.fillStyle = hg; ctx2.fill();
+      ctx2.restore();
+      // Перерисовать рот
+      ctx2.beginPath(); ctx2.arc(128,128,14,0.2,Math.PI-0.2);
+      ctx2.strokeStyle='#0d0d20'; ctx2.lineWidth=4; ctx2.lineCap='round'; ctx2.stroke();
+      // Перерисовать глаза
+      ud.drawEyes(ctx2, ud.blinkState !== 'open', false);
+      ud.tex.needsUpdate = true;
+    }
+
+
+    if (g.userData.sparks) {
+      const base = g.userData.base;
+      g.userData.sparks.forEach(sp => {
+        const angle = t * sp.speed + sp.phase;
+        sp.mesh.position.set(
+          Math.cos(angle) * sp.orbitR,
+          Math.sin(angle) * sp.orbitR * 0.6,
+          sp.orbitZ + Math.sin(t * 1.8 + sp.phase) * base * 0.3
+        );
+        sp.mesh.material.opacity = 0.6 + Math.sin(t * 3 + sp.phase) * 0.3;
+      });
+    }
   }
 }
 
@@ -2276,6 +2823,18 @@ function loop(timestamp) {
   holoRing.rotation  += holoRing.rotSpeed;
   holoRing.pulsePhase += holoRing.pulseSpeed;
   consolePulse.forEach(cp => { if (cp) cp.phase += cp.speed; });
+
+  if (centralLamp) {
+    const tl = Date.now() / 1000;
+    if (centralLamp.userData.smoke) {
+      centralLamp.userData.smoke.material.opacity = 0.4 + Math.sin(tl * 2.3) * 0.25;
+      centralLamp.userData.smoke.scale.setScalar(1 + Math.sin(tl * 1.8) * 0.3);
+    }
+    if (centralLamp.userData.lampLight) {
+      centralLamp.userData.lampLight.intensity = 1.2 + Math.sin(tl * 3.1) * 0.4;
+    }
+    centralLamp.rotation.z = Math.sin(tl * 0.4) * 0.04;
+  }
 
   // Advance scroll offsets for WIP stations
   for (const entry of Object.values(penguinMap)) {
