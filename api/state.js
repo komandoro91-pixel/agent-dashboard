@@ -15,7 +15,7 @@ function computeState(events, startTs) {
       sessions[sid] = {
         session_id: sid,
         session_type: ev.session_type || 'unknown',
-        provider: ev.provider || 'claude',
+        provider: ev.provider || (sid.startsWith('antigravity_') ? 'antigravity' : 'claude'),
         cwd: ev.cwd || '',
         status: 'active',
         started_at: ev.ts || 0,

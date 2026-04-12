@@ -2014,9 +2014,20 @@ function spawnGenie(sessionId, session) {
   genieMap[sessionId] = { group, slotIdx, labelEl: el };
 }
 
+function disposeMesh(obj) {
+  obj.traverse(child => {
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) {
+      if (child.material.map) child.material.map.dispose();
+      child.material.dispose();
+    }
+  });
+}
+
 function despawnGenie(sessionId) {
   const entry = genieMap[sessionId];
   if (!entry) return;
+  disposeMesh(entry.group);
   scene.remove(entry.group);
   entry.labelEl.remove();
   labelEls = labelEls.filter(item => item.genieKey !== sessionId);
@@ -2122,6 +2133,7 @@ function despawnPenguin(agentKey) {
     return;
   }
 
+  disposeMesh(entry.group);
   scene.remove(entry.group);
   if (entry.pointLight) scene.remove(entry.pointLight);
   entry.labelEl.remove();
@@ -2248,11 +2260,11 @@ function renderSessions(state) {
     const agentTiles = agents.map(agent => {
       const c = agentColor(agent.agent_type);
       const initial = (agent.agent_type || '?')[0].toUpperCase();
-      const desc = agent.description || agent.agent_type;
+      const desc = esc(agent.description || agent.agent_type);
       return `<div class="agent-tile at-working">
         <div class="agent-avatar" style="background:${c.bg};color:${c.fg}">${initial}</div>
         <div class="agent-info">
-          <div class="agent-name">${agent.agent_type}</div>
+          <div class="agent-name">${esc(agent.agent_type)}</div>
           <div class="agent-task">${desc}</div>
         </div>
       </div>`;
@@ -2292,13 +2304,13 @@ function renderTimeline() {
     }
 
     const timeStr = e.time || (e.ts ? new Date(e.ts * 1000).toTimeString().slice(0, 5) : '--:--');
-    const sessionShort = e.session_id ? e.session_id.split('_')[0] : '';
-    const detail = e.detail || '';
+    const sessionShort = e.session_id ? esc(e.session_id.split('_')[0]) : '';
+    const detail = esc(e.detail || '');
 
     return `<div class="tl-item">
       <div class="tl-row1">
         <span class="tl-time">${timeStr}</span>
-        <span class="tl-badge ${badgeCls}">${badgeLabel}</span>
+        <span class="tl-badge ${badgeCls}">${esc(badgeLabel)}</span>
         ${sessionShort ? `<span class="tl-agent">${sessionShort}</span>` : ''}
       </div>
       <div class="tl-detail">${detail}</div>
