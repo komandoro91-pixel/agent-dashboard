@@ -260,12 +260,7 @@ header{
   color:var(--indigo);font-size:10px;
   box-shadow:0 0 12px rgba(99,102,241,.25);
 }
-.role-label.genie.antigravity{
-  background:rgba(167,139,250,.18);
-  border-color:rgba(167,139,250,.40);
-  color:var(--purple);
-  box-shadow:0 0 12px rgba(167,139,250,.25);
-}
+
 
 /* ── Sessions sidebar (left) ── */
 #agents-strip{
@@ -769,6 +764,7 @@ const AGENT_COLORS = {
   'Explore':                 {bg:'rgba(96,165,250,.15)',   fg:'#60a5fa'},
   'Plan':                    {bg:'rgba(129,140,248,.15)',  fg:'#818cf8'},
   'general-purpose':         {bg:'rgba(148,163,184,.15)',  fg:'#94a3b8'},
+  'gemini-scout':            {bg:'rgba(16,185,129,.15)',   fg:'#10b981'},
 };
 function agentColor(role){ return AGENT_COLORS[role]||{bg:'rgba(148,163,184,.15)',fg:'#94a3b8'}; }
 
@@ -1542,20 +1538,14 @@ function makePenguin(canvasX, canvasY, faceAngle, hoodieHex, phase, provider) {
   const shadowMesh=new THREE.Mesh(new THREE.CircleGeometry(base*.85,16),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.28}));
   shadowMesh.position.set(0,0,-base*.05); shadowMesh.scale.set(1,.4,1); group.add(shadowMesh);
 
-  // Antigravity Halo (Green)
-  if (provider === 'antigravity') {
-    const haloGeo = new THREE.TorusGeometry(base * 0.50, base * 0.08, 12, 32);
-    const haloMat = new THREE.MeshBasicMaterial({ 
-      color: 0x00ff00, 
-      transparent: false,
-      opacity: 1.0
-    });
+  // Gemini Scout ring (gold)
+  if (provider === 'gemini-scout') {
+    const haloGeo = new THREE.TorusGeometry(base * 0.50, base * 0.06, 12, 32);
+    const haloMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
     const halo = new THREE.Mesh(haloGeo, haloMat);
     halo.position.set(0, base * 0.12, base * 2.45);
     halo.rotation.x = Math.PI / 2;
     group.add(halo);
-    
-    console.warn("SPAWNING AGENT WITH HALO: ", provider);
   }
 
   // Face toward monitor (XY rotation) + forward lean to counter scene 15° tilt
@@ -1647,13 +1637,11 @@ function spawnGenie(sessionId, session) {
   if (freeGenieSlots.length === 0) return;
   const slotIdx = freeGenieSlots.shift();
   const pos = GENIE_SLOTS[slotIdx];
-  const isAntigravity = sessionId.startsWith('antigravity_');
-  const color = isAntigravity ? 0xa78bfa : 0x818cf8;
-  const group = makeGenie(pos.x, pos.y, color);
+  const group = makeGenie(pos.x, pos.y, 0x818cf8);
   scene.add(group);
   const projectName = (session.cwd || '').split(/[\\/]/).filter(Boolean).pop() || 'workspace';
   const el = document.createElement('div');
-  el.className = 'role-label genie' + (isAntigravity ? ' antigravity' : '');
+  el.className = 'role-label genie';
   let displayName = projectName;
   if (displayName.toLowerCase() === 'vs + claude projects') displayName = 'workspace';
   if (displayName.length > 14) displayName = displayName.slice(0, 13) + '…';
@@ -1741,7 +1729,7 @@ function spawnPenguin(agentKey, agentType, provider) {
   // Label
   const el = document.createElement('div');
   el.className = 'role-label';
-  el.textContent = (provider === 'antigravity' ? '🔥[AG] ' : '') + agentType;
+  el.textContent = (provider === 'gemini-scout' || agentType === 'gemini-scout' ? '[GM] ' : '') + agentType;
   el.style.color = c.fg;
   el.style.borderColor = c.fg + '40';
   labelsDiv.appendChild(el);
