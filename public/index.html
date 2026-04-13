@@ -155,18 +155,22 @@ header{
 }
 .metric-card:nth-child(1)::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,var(--green),var(--cyan));border-radius:var(--r) var(--r) 0 0;
-  animation:accent-pulse-green 3s ease-in-out infinite;
+  background:linear-gradient(90deg,transparent,var(--green),var(--cyan),var(--green),transparent);background-size:200% 100%;border-radius:var(--r) var(--r) 0 0;
+  animation:accent-pulse-green 3s ease-in-out infinite,accent-sweep 2.4s linear infinite;
 }
 .metric-card:nth-child(2)::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,var(--indigo),var(--purple));border-radius:var(--r) var(--r) 0 0;
-  animation:accent-pulse-indigo 3s ease-in-out infinite;
+  background:linear-gradient(90deg,transparent,var(--indigo),var(--purple),var(--indigo),transparent);background-size:200% 100%;border-radius:var(--r) var(--r) 0 0;
+  animation:accent-pulse-indigo 3s ease-in-out infinite,accent-sweep 2.8s linear infinite;
 }
 .metric-card:nth-child(3)::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,var(--amber),#f97316);border-radius:var(--r) var(--r) 0 0;
-  animation:accent-pulse-amber 3s ease-in-out infinite;
+  background:linear-gradient(90deg,transparent,var(--amber),#f97316,var(--amber),transparent);background-size:200% 100%;border-radius:var(--r) var(--r) 0 0;
+  animation:accent-pulse-amber 3s ease-in-out infinite,accent-sweep 3.2s linear infinite;
+}
+@keyframes accent-sweep{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
 }
 @keyframes accent-pulse-green{
   0%,100%{box-shadow:0 0 4px rgba(52,211,153,.3);opacity:.8}
