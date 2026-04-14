@@ -89,6 +89,11 @@ header{
   background:rgba(129,140,248,.10);border:1px solid rgba(129,140,248,.20);
   border-radius:20px;font-size:11px;color:var(--indigo);font-weight:500;
   white-space:nowrap;
+  transition:background .25s,border-color .25s,box-shadow .25s;
+}
+.release-chip:hover{
+  background:rgba(129,140,248,.18);border-color:rgba(129,140,248,.40);
+  box-shadow:0 0 8px rgba(129,140,248,.22),inset 0 0 8px rgba(129,140,248,.08);
 }
 .release-chip-label{opacity:.6;margin-right:2px}
 @keyframes lp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
