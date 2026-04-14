@@ -100,13 +100,16 @@ function computeState(events, startTs) {
         primary.started_at = Math.min(primary.started_at, dup.started_at);
         primary.active_agents.push(...dup.active_agents);
         primary.completed_agents.push(...dup.completed_agents);
-        dup.status = 'ended';
+        dup.status = 'merged'; // deduped by VS Code dual-process — exclude from visible
       }
     }
   }
 
+  // Include sessions with recent activity (last 5 minutes), regardless of idle/ended status
+  // Genie stays visible between responses — it represents the whole session lifetime
+  // Only 'merged' (VS Code dedup) sessions are excluded
   const visible = Object.values(sessions).filter(
-    s => (s.status !== 'ended' || s.active_agents.length > 0) && now - s.last_event_ts < 300
+    s => s.status !== 'merged' && now - s.last_event_ts < 300
   );
   const total_active = visible.filter(
     s => s.status === 'active' || s.active_agents.length > 0

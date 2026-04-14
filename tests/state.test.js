@@ -14,15 +14,16 @@ function ev(phase, { session_id = 'sess1', tsOffset = 0, cwd = '/unique-' + sess
 // 1. session_end → session disappears from visible
 // ---------------------------------------------------------------------------
 
-describe('session_end removes session from visible', () => {
-  it('session with phase=session_end is not visible', () => {
+describe('session_end: genie stays visible (idle between responses)', () => {
+  it('recent session_end is still visible with idle status, excluded from total_active', () => {
     const events = [
       ev('session_start', { session_id: 'sess1', tsOffset: 10 }),
       ev('session_end',   { session_id: 'sess1', tsOffset: 1 }),
     ];
     const result = computeState(events, 0);
     const ids = result.sessions.map(s => s.session_id);
-    expect(ids).not.toContain('sess1');
+    expect(ids).toContain('sess1');
+    expect(result.sessions[0].status).toBe('ended');
     expect(result.total_active).toBe(0);
   });
 
@@ -39,7 +40,7 @@ describe('session_end removes session from visible', () => {
     expect(result.active_penguins[0].agent_type).toBe('developer');
   });
 
-  it('session_end on one session does not affect another active session', () => {
+  it('session_end on one session does not affect another active session; both remain visible', () => {
     const events = [
       ev('session_start', { session_id: 'ended', cwd: '/proj-ended', tsOffset: 20 }),
       ev('session_end',   { session_id: 'ended', cwd: '/proj-ended', tsOffset: 5 }),
@@ -48,8 +49,8 @@ describe('session_end removes session from visible', () => {
     const result = computeState(events, 0);
     const ids = result.sessions.map(s => s.session_id);
     expect(ids).toContain('alive');
-    expect(ids).not.toContain('ended');
-    expect(result.total_active).toBe(1);
+    expect(ids).toContain('ended'); // idle session stays visible until 5-min timeout
+    expect(result.total_active).toBe(1); // only 'alive' counts as active
   });
 });
 
