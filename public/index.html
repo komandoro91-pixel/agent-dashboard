@@ -142,6 +142,26 @@ header{
   position:relative;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;
   animation:card-enter .5s cubic-bezier(.22,.68,0,1.2) both;
 }
+.metric-card:nth-child(1) .metric-val::before{
+  content:'';position:absolute;inset:-18px;border-radius:50%;
+  background:radial-gradient(circle,rgba(52,211,153,.13) 0%,transparent 70%);
+  animation:orb-drift 5s ease-in-out infinite;pointer-events:none;z-index:0;
+}
+.metric-card:nth-child(2) .metric-val::before{
+  content:'';position:absolute;inset:-18px;border-radius:50%;
+  background:radial-gradient(circle,rgba(129,140,248,.13) 0%,transparent 70%);
+  animation:orb-drift 6s ease-in-out infinite reverse;pointer-events:none;z-index:0;
+}
+.metric-card:nth-child(3) .metric-val::before{
+  content:'';position:absolute;inset:-18px;border-radius:50%;
+  background:radial-gradient(circle,rgba(251,191,36,.12) 0%,transparent 70%);
+  animation:orb-drift 7s ease-in-out infinite;pointer-events:none;z-index:0;
+}
+.metric-val{position:relative;}
+@keyframes orb-drift{
+  0%,100%{transform:translateY(0) scale(1);opacity:.8}
+  50%{transform:translateY(-6px) scale(1.1);opacity:1}
+}
 .metric-card:nth-child(1){animation-delay:.05s}
 .metric-card:nth-child(2){animation-delay:.15s}
 .metric-card:nth-child(3){animation-delay:.25s}

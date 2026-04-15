@@ -78,5 +78,9 @@
   {
     "date": "2026-04-14",
     "note": "Pulsing glow ring on live-dot hover"
+  },
+  {
+    "date": "2026-04-15",
+    "note": "Floating glow orb behind metric card values"
   }
 ]
