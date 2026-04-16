@@ -2379,17 +2379,25 @@ function renderMetrics() {
 //  API POLLING
 // ═══════════════════════════════════════════════════════════
 let lastEventTs = 0;
+let isFetchingState = false;
+let isFetchingEvents = false;
 
 async function fetchState() {
+  if (isFetchingState) return;
+  isFetchingState = true;
   try {
     const res = await fetch('/api/state');
     if (!res.ok) return;
     const data = await res.json();
     applyState(data);
-  } catch (_) {}
+  } catch (_) {} finally {
+    isFetchingState = false;
+  }
 }
 
 async function fetchEvents() {
+  if (isFetchingEvents) return;
+  isFetchingEvents = true;
   try {
     const res = await fetch('/api/events?since=' + lastEventTs + '&limit=50');
     if (!res.ok) return;
@@ -2405,7 +2413,9 @@ async function fetchEvents() {
       renderTimeline();
       renderMetrics();
     }
-  } catch (_) {}
+  } catch (_) {} finally {
+    isFetchingEvents = false;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2954,12 +2964,29 @@ async function fetchRelease() {
   } catch {}
 }
 
+// Polling: 10s balances Upstash free-tier (500k/mo) with live feel.
+// Paused on hidden tabs via Page Visibility API to save quota.
+const POLLING_INTERVAL_MS = 10000;
+let pollStateTimer = null;
+let pollEventsTimer = null;
+function startPolling() {
+  if (!pollStateTimer) pollStateTimer = setInterval(fetchState, POLLING_INTERVAL_MS);
+  if (!pollEventsTimer) pollEventsTimer = setInterval(fetchEvents, POLLING_INTERVAL_MS);
+}
+function stopPolling() {
+  if (pollStateTimer) { clearInterval(pollStateTimer); pollStateTimer = null; }
+  if (pollEventsTimer) { clearInterval(pollEventsTimer); pollEventsTimer = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { stopPolling(); }
+  else { fetchState(); fetchEvents(); startPolling(); }
+});
+
 // Start polling
 fetchState();
 fetchEvents();
 fetchRelease();
-setInterval(fetchState, 10000);
-setInterval(fetchEvents, 10000);
+startPolling();
 
 // Mobile tab switching
 (function() {
