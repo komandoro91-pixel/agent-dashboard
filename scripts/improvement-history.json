@@ -82,5 +82,9 @@
   {
     "date": "2026-04-15",
     "note": "Floating glow orb behind metric card values"
+  },
+  {
+    "date": "2026-04-16",
+    "note": "Tinted corner accent glow on metric cards"
   }
 ]
