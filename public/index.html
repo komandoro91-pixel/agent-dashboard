@@ -2958,8 +2958,8 @@ async function fetchRelease() {
 fetchState();
 fetchEvents();
 fetchRelease();
-setInterval(fetchState, isMobileDevice ? 3000 : 1500);
-setInterval(fetchEvents, isMobileDevice ? 2000 : 800);
+setInterval(fetchState, 10000);
+setInterval(fetchEvents, 10000);
 
 // Mobile tab switching
 (function() {
