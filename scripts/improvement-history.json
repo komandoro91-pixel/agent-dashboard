@@ -86,5 +86,9 @@
   {
     "date": "2026-04-16",
     "note": "Tinted corner accent glow on metric cards"
+  },
+  {
+    "date": "2026-04-25",
+    "note": "Glowing left accent bar on metric cards"
   }
 ]
