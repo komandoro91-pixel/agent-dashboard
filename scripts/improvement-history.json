@@ -90,5 +90,9 @@
   {
     "date": "2026-04-25",
     "note": "Glowing left accent bar on metric cards"
+  },
+  {
+    "date": "2026-04-26",
+    "note": "Shimmer sweep on nav btn active state"
   }
 ]
