@@ -94,5 +94,9 @@
   {
     "date": "2026-04-26",
     "note": "Shimmer sweep on nav btn active state"
+  },
+  {
+    "date": "2026-04-27",
+    "note": "Fade-in stagger animation on metric cards"
   }
 ]

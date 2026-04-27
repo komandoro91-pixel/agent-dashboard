@@ -142,6 +142,11 @@ header{
   position:relative;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;
   animation:card-enter .5s cubic-bezier(.22,.68,0,1.2) both;
 }
+.metric-card:nth-child(1){animation-delay:.05s}
+.metric-card:nth-child(2){animation-delay:.15s}
+.metric-card:nth-child(3){animation-delay:.25s}
+.metric-card{
+}
 .metric-card:nth-child(1)::after{content:'';position:absolute;left:0;top:12%;height:76%;width:2px;border-radius:2px;background:linear-gradient(180deg,transparent,var(--green),transparent);opacity:.7;transition:opacity .3s;}
 .metric-card:nth-child(1):hover::after{opacity:1;box-shadow:0 0 8px var(--green);}
 .metric-card:nth-child(2)::after{content:'';position:absolute;left:0;top:12%;height:76%;width:2px;border-radius:2px;background:linear-gradient(180deg,transparent,var(--indigo),transparent);opacity:.7;transition:opacity .3s;}
