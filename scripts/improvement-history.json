@@ -102,5 +102,9 @@
   {
     "date": "2026-04-28",
     "note": "Glowing top edge accent on metric cards hover"
+  },
+  {
+    "date": "2026-04-29",
+    "note": "Subtle gradient shimmer on logo icon"
   }
 ]
