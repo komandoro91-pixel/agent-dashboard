@@ -110,5 +110,9 @@
   {
     "date": "2026-04-30",
     "note": "Glowing text shadow on metric card values"
+  },
+  {
+    "date": "2026-05-01",
+    "note": "Tooltip fade-in on metric card hover"
   }
 ]

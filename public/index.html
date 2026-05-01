@@ -158,6 +158,25 @@ header{
   transform:translateY(-2px);
   box-shadow:0 8px 24px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.06);
 }
+.metric-card:hover .m-label::after{
+  opacity:1;transform:translateY(0);
+}
+.m-label{
+  position:relative;
+}
+.m-label::after{
+  content:attr(data-tip);
+  position:absolute;
+  bottom:calc(100% + 6px);
+  left:50%;transform:translateX(-50%) translateY(4px);
+  background:rgba(15,15,25,.92);border:1px solid rgba(255,255,255,.10);
+  color:var(--dim);font-size:10px;white-space:nowrap;
+  padding:3px 8px;border-radius:5px;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .22s ease,transform .22s ease;
+  z-index:10;
+}
 .metric-card::before{
   content:'';position:absolute;top:0;left:10%;width:80%;height:1px;
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);
