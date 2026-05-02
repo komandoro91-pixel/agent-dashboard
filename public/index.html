@@ -94,7 +94,7 @@ header{
   0%,100%{box-shadow:0 0 4px rgba(52,211,153,.10),inset 0 0 6px rgba(52,211,153,.05)}
   50%{box-shadow:0 0 10px rgba(52,211,153,.28),inset 0 0 12px rgba(52,211,153,.12)}
 }
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:lp 2s ease-in-out infinite;box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:lp 2s ease-in-out infinite,live-ring 2s ease-out infinite}@keyframes live-ring{0%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%{box-shadow:0 0 0 5px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:lp 2s ease-in-out infinite,live-ring 2s ease-out infinite,live-dot-scale 2s ease-in-out infinite}@keyframes live-dot-scale{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.35);filter:brightness(1.4)}}@keyframes live-ring{0%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%{box-shadow:0 0 0 5px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
 .release-chip{
   display:flex;align-items:center;gap:5px;
   padding:3px 10px;
