@@ -118,5 +118,9 @@
   {
     "date": "2026-05-02",
     "note": "Subtle scale pulse on live-dot breath"
+  },
+  {
+    "date": "2026-05-03",
+    "note": "Gradient border glow on metric card hover"
   }
 ]
