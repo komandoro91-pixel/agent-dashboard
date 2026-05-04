@@ -124,7 +124,7 @@ header{
   pointer-events:none;
 }
 .nav-btn:hover::after{background-position:-200% 0}
-.nav-btn:hover{background:var(--glassH);color:var(--text);border-color:var(--b)}
+.nav-btn:hover{background:var(--glassH);color:var(--text);border-color:transparent;background-clip:padding-box;box-shadow:0 0 0 1px rgba(129,140,248,.35),0 0 8px rgba(129,140,248,.15)}
 .nav-btn.active{background:var(--glass);border-color:var(--bH);color:var(--text);box-shadow:inset 0 0 12px rgba(129,140,248,.10),0 0 8px rgba(129,140,248,.08)}.nav-btn.active::before{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(129,140,248,.15) 50%,transparent 70%);background-size:200% 100%;background-position:200% 0;animation:active-btn-shimmer 3s ease-in-out infinite;pointer-events:none;border-radius:inherit;}@keyframes active-btn-shimmer{0%,100%{background-position:200% 0}50%{background-position:-200% 0}}
 .h-meta{
   display:flex;align-items:center;gap:14px;
