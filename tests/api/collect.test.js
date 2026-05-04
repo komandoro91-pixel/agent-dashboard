@@ -63,4 +63,13 @@ describe('collect auth — fail-closed', () => {
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(401);
   });
+
+  it('case 5: env not set (deleted) + token header → 401', async () => {
+    // beforeEach already deletes the var; do not re-assign.
+    expect(process.env.COLLECT_TOKEN).toBeUndefined();
+    const req = makeReq({ headers: { 'x-token': 'anything' }, body: { phase: 'start' } });
+    const res = makeRes();
+    await handler(req, res);
+    expect(res.status).toHaveBeenCalledWith(401);
+  });
 });
