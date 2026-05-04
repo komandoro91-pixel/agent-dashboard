@@ -10,7 +10,7 @@ module.exports = async function handler(req, res) {
 
   const token = req.headers['x-token'] || '';
   const expected = process.env.COLLECT_TOKEN || '';
-  if (expected && token !== expected) return res.status(401).send('Unauthorized');
+  if (!expected || token !== expected) return res.status(401).send('Unauthorized');
 
   const event = req.body;
   if (!event || typeof event !== 'object') return res.status(400).end();
