@@ -130,5 +130,9 @@
   {
     "date": "2026-05-05",
     "note": "Frosted glass depth ring on header border"
+  },
+  {
+    "date": "2026-05-06",
+    "note": "Animated gradient shimmer on live-chip text"
   }
 ]
