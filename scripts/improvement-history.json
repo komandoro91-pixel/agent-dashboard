@@ -138,5 +138,9 @@
   {
     "date": "2026-05-07",
     "note": "Glowing bottom edge accent on active nav-btn"
+  },
+  {
+    "date": "2026-05-08",
+    "note": "Subtle inner glow pulse on metric cards"
   }
 ]
