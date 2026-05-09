@@ -172,6 +172,14 @@ header{
   box-shadow:0 8px 24px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.06),0 0 16px rgba(129,140,248,.12);
   border-color:rgba(129,140,248,.28);
 }
+.metric-card:hover .m-icon{
+  filter:drop-shadow(0 0 6px currentColor);
+  transform:scale(1.15);
+  transition:filter .25s ease,transform .25s cubic-bezier(.22,.68,0,1.4);
+}
+.m-icon{
+  transition:filter .25s ease,transform .25s ease;
+}
 .metric-card:hover .m-label::after{
   opacity:1;transform:translateY(0);
 }
