@@ -3416,9 +3416,9 @@ function loop(timestamp) {
 // ═══════════════════════════════════════════════════════════
 //  COFFEE STATION — Constants
 // ═══════════════════════════════════════════════════════════
-const COFFEE_TABLE_POS     = { x: 100, y: 80 };
+const COFFEE_TABLE_POS     = { x: 90, y: 60 };
 const COFFEE_SLOTS_COUNT   = 6;
-const COFFEE_SLOT_RADIUS   = 35;
+const COFFEE_SLOT_RADIUS   = 50;
 const COFFEE_WALK_MS       = 2000;
 const COFFEE_BREW_MS       = 3000;
 const COFFEE_SIP_MS        = 9000;
@@ -3449,70 +3449,77 @@ function makeCoffeeStation() {
   const group = new THREE.Group();
   group.position.set(COFFEE_TABLE_POS.x, COFFEE_TABLE_POS.y, 0);
 
-  // Table
-  const tableGeo = new THREE.BoxGeometry(80, 8, 50);
-  const tableMat = new THREE.MeshBasicMaterial({ color: 0x6b4423 });
+  // Table — scaled x1.5: 120w × 12h × 75d
+  // Y center=0, occupies y=-6..+6. Top edge (screen-up) = y=-6.
+  const tableGeo = new THREE.BoxGeometry(120, 12, 75);
+  const tableMat = new THREE.MeshLambertMaterial({ color: 0x6b4423 });
   const table = new THREE.Mesh(tableGeo, tableMat);
   table.position.set(0, 0, -4);
   group.add(table);
 
-  // Coffee machine — base
-  const machineGeo = new THREE.BoxGeometry(20, 30, 16);
-  const machineMat = new THREE.MeshBasicMaterial({ color: 0x9ca3af });
+  // Coffee machine — base: 30w × 45h × 24d
+  // Sits on table top (y=-6): center y = -6 - 22.5 = -28.5
+  const machineGeo = new THREE.BoxGeometry(30, 45, 24);
+  const machineMat = new THREE.MeshLambertMaterial({ color: 0x9ca3af });
   const machine = new THREE.Mesh(machineGeo, machineMat);
-  machine.position.set(0, -10, 12);
+  machine.position.set(0, -28.5, 12);
   group.add(machine);
 
-  // Dispenser top
-  const dispenserGeo = new THREE.CylinderGeometry(8, 8, 4, 12);
-  const dispenserMat = new THREE.MeshBasicMaterial({ color: 0x1f2937 });
+  // Dispenser — disc on machine top face
+  // rotation.x=PI/2: cylinder axis becomes Z, radius 12 extends in Y.
+  // Machine top in Y = -28.5 - 22.5 = -51. Dispenser center y=-51.
+  const dispenserGeo = new THREE.CylinderGeometry(12, 12, 6, 16);
+  const dispenserMat = new THREE.MeshLambertMaterial({ color: 0x1f2937 });
   const dispenser = new THREE.Mesh(dispenserGeo, dispenserMat);
-  dispenser.position.set(0, -10, 22);
+  dispenser.position.set(0, -51, 15);
   dispenser.rotation.x = Math.PI / 2;
   group.add(dispenser);
 
-  // Spout (vertical, hangs down from dispenser)
-  const spoutGeo = new THREE.CylinderGeometry(1.5, 1.5, 4, 8);
-  const spoutMat = new THREE.MeshBasicMaterial({ color: 0x1f2937 });
+  // Spout — hangs below dispenser toward cups, along Z axis (rotation.x=PI/2)
+  const spoutGeo = new THREE.CylinderGeometry(2, 2, 6, 8);
+  const spoutMat = new THREE.MeshLambertMaterial({ color: 0x374151 });
   const spout = new THREE.Mesh(spoutGeo, spoutMat);
-  spout.position.set(0, -10, 14);
+  spout.position.set(0, -51, 9);
+  spout.rotation.x = Math.PI / 2;
   group.add(spout);
 
-  // LED indicator
-  const ledGeo = new THREE.SphereGeometry(1.2, 8, 6);
+  // LED indicator — on machine front-right face
+  const ledGeo = new THREE.SphereGeometry(1.8, 8, 6);
   const ledMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
   const led = new THREE.Mesh(ledGeo, ledMat);
-  led.position.set(6, -10, 20);
+  led.position.set(9, -30, 24);
   group.add(led);
 
-  // Plate with fruits (right side of machine)
-  const plateGeo = new THREE.CylinderGeometry(12, 12, 1.5, 16);
-  const plateMat = new THREE.MeshBasicMaterial({ color: 0xe5e7eb });
+  // Plate — on table right side, rotated so disc faces viewer
+  // Table top y=-6, plate height=2.5 (along Z after rotation), center z=5+1.25=top at z=6.25
+  const plateGeo = new THREE.CylinderGeometry(18, 18, 2.5, 16);
+  const plateMat = new THREE.MeshLambertMaterial({ color: 0xe5e7eb });
   const plate = new THREE.Mesh(plateGeo, plateMat);
-  plate.position.set(25, 0, 5);
+  plate.position.set(38, -7.25, 5);
   plate.rotation.x = Math.PI / 2;
   group.add(plate);
 
-  // Apple
-  const appleGeo = new THREE.SphereGeometry(3.5, 10, 8);
+  // Fruits — on plate, triangle layout, sit above plate top (z≈6.25+5≈11)
+  // Apple (top = screen-up = negative Y)
+  const appleGeo = new THREE.SphereGeometry(5, 10, 8);
   const appleMat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
   const apple = new THREE.Mesh(appleGeo, appleMat);
-  apple.position.set(22, -6, 8);
+  apple.position.set(38, -14, 10);
   group.add(apple);
 
-  // Banana (elongated sphere)
-  const bananaGeo = new THREE.SphereGeometry(3.5, 10, 8);
+  // Banana (left)
+  const bananaGeo = new THREE.SphereGeometry(4.5, 10, 8);
   const bananaMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
   const banana = new THREE.Mesh(bananaGeo, bananaMat);
   banana.scale.set(1.5, 0.6, 0.8);
-  banana.position.set(28, 6, 8);
+  banana.position.set(30, -5, 10);
   group.add(banana);
 
-  // Orange
-  const orangeGeo = new THREE.SphereGeometry(3.2, 10, 8);
+  // Orange (right)
+  const orangeGeo = new THREE.SphereGeometry(4.5, 10, 8);
   const orangeMat = new THREE.MeshBasicMaterial({ color: 0xfb923c });
   const orange = new THREE.Mesh(orangeGeo, orangeMat);
-  orange.position.set(25, 0, 10);
+  orange.position.set(46, -5, 10);
   group.add(orange);
 
   // Store fruit meshes for easter egg (scale to 0.7 on bite)
@@ -3527,8 +3534,8 @@ function makeCoffeeStation() {
 function makeCupMesh() {
   const cupGroup = new THREE.Group();
 
-  // Glass body (transparent)
-  const glassCyl = new THREE.CylinderGeometry(3, 2.5, 8, 10);
+  // Glass body (transparent) — scaled x1.5
+  const glassCyl = new THREE.CylinderGeometry(4.5, 3.8, 12, 12);
   const glassMat = new THREE.MeshBasicMaterial({
     color: 0xffffff,
     transparent: true,
@@ -3538,10 +3545,10 @@ function makeCupMesh() {
   cupGroup.add(glass);
 
   // Coffee level inside (starts at scale.y = 0, grows to 1 during brewing)
-  const coffeeCyl = new THREE.CylinderGeometry(2.7, 2.3, 0.1, 10);
+  const coffeeCyl = new THREE.CylinderGeometry(4.0, 3.4, 0.1, 12);
   const coffeeMat = new THREE.MeshBasicMaterial({ color: 0x5d2f0d });
   const coffeeLevel = new THREE.Mesh(coffeeCyl, coffeeMat);
-  coffeeLevel.position.y = -3.9; // bottom of glass
+  coffeeLevel.position.y = -5.9; // bottom of glass
   coffeeLevel.scale.y = 0.1;    // start almost empty
   cupGroup.add(coffeeLevel);
 
@@ -3718,8 +3725,8 @@ function _updateMachinePath(penguin, agentKey, elapsed, p, targetX, targetY) {
 }
 
 function _updateFruitPath(penguin, agentKey, elapsed, p, targetX, targetY) {
-  // Fruit plate position
-  const plateX = COFFEE_TABLE_POS.x + 25;
+  // Fruit plate position (matches plate local offset x=38 from group)
+  const plateX = COFFEE_TABLE_POS.x + 38;
   const plateY = COFFEE_TABLE_POS.y;
 
   // Walking to fruit plate
