@@ -138,7 +138,9 @@ header{
 .h-meta{
   display:flex;align-items:center;gap:14px;
   color:var(--dim2);font-size:11px;font-family:var(--mono);
-  border-left:1px solid var(--b);padding-left:14px;margin-left:4px;
+  border-left:1px solid transparent;
+  border-image:linear-gradient(180deg,transparent 0%,rgba(129,140,248,.35) 50%,transparent 100%) 1;
+  padding-left:14px;margin-left:4px;
 }
 
 /* ── Main content area ── */
