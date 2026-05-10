@@ -2327,32 +2327,49 @@ function spawnPenguin(agentKey, agentType, provider, sessionId) {
   penguinMap[agentKey] = { group, stationIdx, labelEl: el, pointLight: pl, spawnedAt: Date.now(), sessionId };
 }
 
-const MIN_ALIVE_MS = 30_000; // 30 seconds minimum visibility
+const MIN_ALIVE_MS = 30_000; // 30 seconds minimum visibility — fallback when all coffee slots busy
 
 function despawnPenguin(agentKey) {
   const entry = penguinMap[agentKey];
   if (!entry) return;
 
-  if (entry.spawnedAt && Date.now() - entry.spawnedAt < MIN_ALIVE_MS) {
-    const remaining = MIN_ALIVE_MS - (Date.now() - entry.spawnedAt);
-    setTimeout(() => despawnPenguin(agentKey), remaining + 100);
+  // If penguin already in coffee animation — let it finish naturally
+  if (entry.coffeeData && entry.coffeeData.coffee_phase !== null) return;
+
+  // Try coffee animation first
+  if (!entry.coffeeData) {
+    entry.coffeeData = {
+      coffee_phase: null,
+      coffee_started_at: 0,
+      coffee_slot_idx: null,
+      coffee_target_mode: null,
+      cup_mesh: null,
+      fruit_held_mesh: null,
+      _pickedFruit: null,
+      _coffeeSlotFallback: false,
+      mesh_group: entry.group,
+    };
+  }
+
+  startCoffeeAnimation(entry.coffeeData);
+
+  if (entry.coffeeData.coffee_phase !== null) {
+    // Coffee animation started — animate3D will call _coffeeDone when ready
     return;
   }
 
-  disposeMesh(entry.group);
-  scene.remove(entry.group);
-  if (entry.pointLight) scene.remove(entry.pointLight);
-  entry.labelEl.remove();
+  // Fallback: MIN_ALIVE_MS retire (coffee slots full)
+  if (entry.spawnedAt && Date.now() - entry.spawnedAt < MIN_ALIVE_MS) {
+    const remaining = MIN_ALIVE_MS - (Date.now() - entry.spawnedAt);
+    setTimeout(() => {
+      // Clean up coffeeData so removePenguin3D can proceed
+      if (entry.coffeeData) entry.coffeeData = null;
+      removePenguin3D(agentKey);
+    }, remaining + 100);
+    return;
+  }
 
-  freeStations.push(entry.stationIdx);
-  freeStations.sort((a, b) => a - b);
-
-  delete stationColorMap[entry.stationIdx];
-  delete stationScrollOffset[entry.stationIdx];
-  bgDirty = true;
-
-  labelEls = labelEls.filter(item => item.agentKey !== agentKey);
-  delete penguinMap[agentKey];
+  removePenguin3D(agentKey);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3327,6 +3344,13 @@ function animate3D() {
       });
     }
   }
+
+  // Coffee animations — update each penguin in coffee lifecycle
+  for (const [agentKey, entry] of Object.entries(penguinMap)) {
+    if (entry.coffeeData && entry.coffeeData.coffee_phase !== null) {
+      updateCoffeePhase(entry.coffeeData, agentKey);
+    }
+  }
 }
 
 function loop(timestamp) {
@@ -3386,6 +3410,418 @@ function loop(timestamp) {
   renderer.render(scene, camera);
   updateLabels();
   updateHUD();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  COFFEE STATION — Constants
+// ═══════════════════════════════════════════════════════════
+const COFFEE_TABLE_POS     = { x: 100, y: 80 };
+const COFFEE_SLOTS_COUNT   = 6;
+const COFFEE_SLOT_RADIUS   = 35;
+const COFFEE_WALK_MS       = 2000;
+const COFFEE_BREW_MS       = 3000;
+const COFFEE_SIP_MS        = 9000;
+const COFFEE_FADE_MS       = 1000;
+const COFFEE_TOTAL_MS      = 15000;
+const FRUIT_BITE_PROBABILITY = 0.1;
+const FRUIT_BITE_WALK_MS   = 2000;
+const FRUIT_BITE_PICK_MS   = 2000;
+const FRUIT_BITE_MUNCH_MS  = 9000;
+const FRUIT_BITE_FADE_MS   = 1000;
+const FRUIT_BITE_TOTAL_MS  = 14000;
+
+// Slot world positions (6 positions around coffee table)
+const COFFEE_SLOTS = Array.from({ length: COFFEE_SLOTS_COUNT }, (_, i) => {
+  const angle = (i / COFFEE_SLOTS_COUNT) * Math.PI * 2;
+  return {
+    idx: i,
+    busy: false,
+    x: COFFEE_TABLE_POS.x + Math.cos(angle) * COFFEE_SLOT_RADIUS,
+    y: COFFEE_TABLE_POS.y + Math.sin(angle) * COFFEE_SLOT_RADIUS,
+  };
+});
+
+// ─────────────────────────────────────────────────────────
+//  COFFEE STATION BUILDER
+// ─────────────────────────────────────────────────────────
+function makeCoffeeStation() {
+  const group = new THREE.Group();
+  group.position.set(COFFEE_TABLE_POS.x, COFFEE_TABLE_POS.y, 0);
+
+  // Table
+  const tableGeo = new THREE.BoxGeometry(80, 8, 50);
+  const tableMat = new THREE.MeshBasicMaterial({ color: 0x6b4423 });
+  const table = new THREE.Mesh(tableGeo, tableMat);
+  table.position.set(0, 0, -4);
+  group.add(table);
+
+  // Coffee machine — base
+  const machineGeo = new THREE.BoxGeometry(20, 30, 16);
+  const machineMat = new THREE.MeshBasicMaterial({ color: 0x9ca3af });
+  const machine = new THREE.Mesh(machineGeo, machineMat);
+  machine.position.set(0, -10, 12);
+  group.add(machine);
+
+  // Dispenser top
+  const dispenserGeo = new THREE.CylinderGeometry(8, 8, 4, 12);
+  const dispenserMat = new THREE.MeshBasicMaterial({ color: 0x1f2937 });
+  const dispenser = new THREE.Mesh(dispenserGeo, dispenserMat);
+  dispenser.position.set(0, -10, 22);
+  dispenser.rotation.x = Math.PI / 2;
+  group.add(dispenser);
+
+  // Spout (vertical, hangs down from dispenser)
+  const spoutGeo = new THREE.CylinderGeometry(1.5, 1.5, 4, 8);
+  const spoutMat = new THREE.MeshBasicMaterial({ color: 0x1f2937 });
+  const spout = new THREE.Mesh(spoutGeo, spoutMat);
+  spout.position.set(0, -10, 14);
+  group.add(spout);
+
+  // LED indicator
+  const ledGeo = new THREE.SphereGeometry(1.2, 8, 6);
+  const ledMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+  const led = new THREE.Mesh(ledGeo, ledMat);
+  led.position.set(6, -10, 20);
+  group.add(led);
+
+  // Plate with fruits (right side of machine)
+  const plateGeo = new THREE.CylinderGeometry(12, 12, 1.5, 16);
+  const plateMat = new THREE.MeshBasicMaterial({ color: 0xe5e7eb });
+  const plate = new THREE.Mesh(plateGeo, plateMat);
+  plate.position.set(25, 0, 5);
+  plate.rotation.x = Math.PI / 2;
+  group.add(plate);
+
+  // Apple
+  const appleGeo = new THREE.SphereGeometry(3.5, 10, 8);
+  const appleMat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
+  const apple = new THREE.Mesh(appleGeo, appleMat);
+  apple.position.set(22, -6, 8);
+  group.add(apple);
+
+  // Banana (elongated sphere)
+  const bananaGeo = new THREE.SphereGeometry(3.5, 10, 8);
+  const bananaMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+  const banana = new THREE.Mesh(bananaGeo, bananaMat);
+  banana.scale.set(1.5, 0.6, 0.8);
+  banana.position.set(28, 6, 8);
+  group.add(banana);
+
+  // Orange
+  const orangeGeo = new THREE.SphereGeometry(3.2, 10, 8);
+  const orangeMat = new THREE.MeshBasicMaterial({ color: 0xfb923c });
+  const orange = new THREE.Mesh(orangeGeo, orangeMat);
+  orange.position.set(25, 0, 10);
+  group.add(orange);
+
+  // Store fruit meshes for easter egg (scale to 0.7 on bite)
+  group.userData.fruits = [apple, banana, orange];
+
+  return group;
+}
+
+// ─────────────────────────────────────────────────────────
+//  CUP MESH FACTORY
+// ─────────────────────────────────────────────────────────
+function makeCupMesh() {
+  const cupGroup = new THREE.Group();
+
+  // Glass body (transparent)
+  const glassCyl = new THREE.CylinderGeometry(3, 2.5, 8, 10);
+  const glassMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.4,
+  });
+  const glass = new THREE.Mesh(glassCyl, glassMat);
+  cupGroup.add(glass);
+
+  // Coffee level inside (starts at scale.y = 0, grows to 1 during brewing)
+  const coffeeCyl = new THREE.CylinderGeometry(2.7, 2.3, 0.1, 10);
+  const coffeeMat = new THREE.MeshBasicMaterial({ color: 0x5d2f0d });
+  const coffeeLevel = new THREE.Mesh(coffeeCyl, coffeeMat);
+  coffeeLevel.position.y = -3.9; // bottom of glass
+  coffeeLevel.scale.y = 0.1;    // start almost empty
+  cupGroup.add(coffeeLevel);
+
+  cupGroup.userData.coffeeLevel = coffeeLevel;
+  return cupGroup;
+}
+
+// ─────────────────────────────────────────────────────────
+//  DISPOSE HELPER
+// ─────────────────────────────────────────────────────────
+function disposeCoffeeMesh(mesh) {
+  if (!mesh) return;
+  mesh.traverse(child => {
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) {
+      if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+      else child.material.dispose();
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────
+//  COFFEE STATION INIT
+// ─────────────────────────────────────────────────────────
+const coffeeStation = makeCoffeeStation();
+scene.add(coffeeStation);
+
+// ─────────────────────────────────────────────────────────
+//  START COFFEE ANIMATION — entry point replacing MIN_ALIVE_MS
+// ─────────────────────────────────────────────────────────
+function startCoffeeAnimation(penguin) {
+  // Idempotency: skip if already in coffee animation
+  if (penguin.coffee_phase !== null && penguin.coffee_phase !== undefined) return;
+  // Mesh guard (race condition: group may have been disposed)
+  if (!penguin.mesh_group) return;
+
+  // Find free slot
+  const slot = COFFEE_SLOTS.find(s => !s.busy);
+  if (!slot) {
+    // Fallback: old MIN_ALIVE_MS retire
+    penguin._coffeeSlotFallback = true;
+    return;
+  }
+  slot.busy = true;
+
+  // Init coffee fields on penguin
+  penguin.coffee_phase      = 'walking';
+  penguin.coffee_started_at = performance.now();
+  penguin.coffee_slot_idx   = slot.idx;
+  penguin.coffee_target_mode = Math.random() < FRUIT_BITE_PROBABILITY ? 'fruit' : 'machine';
+  penguin.cup_mesh          = null;
+  penguin.fruit_held_mesh   = null;
+}
+
+// ─────────────────────────────────────────────────────────
+//  UPDATE COFFEE PHASE — called from animate3D each frame
+// ─────────────────────────────────────────────────────────
+function updateCoffeePhase(penguin, agentKey) {
+  const p = penguin.mesh_group;
+  if (!p) return;
+
+  const now = performance.now();
+  const elapsed = now - penguin.coffee_started_at;
+  const slot = COFFEE_SLOTS[penguin.coffee_slot_idx];
+  const targetX = slot ? slot.x : COFFEE_TABLE_POS.x;
+  const targetY = slot ? slot.y : COFFEE_TABLE_POS.y;
+
+  if (penguin.coffee_target_mode === 'fruit') {
+    _updateFruitPath(penguin, agentKey, elapsed, p, targetX, targetY);
+  } else {
+    _updateMachinePath(penguin, agentKey, elapsed, p, targetX, targetY);
+  }
+}
+
+function _lerpPos(p, targetX, targetY, alpha) {
+  p.position.x += (targetX - p.position.x) * alpha;
+  p.position.y += (targetY - p.position.y) * alpha;
+}
+
+function _updateMachinePath(penguin, agentKey, elapsed, p, targetX, targetY) {
+  // Walking phase: 0 → COFFEE_WALK_MS
+  if (elapsed < COFFEE_WALK_MS) {
+    penguin.coffee_phase = 'walking';
+    const walkT = elapsed / COFFEE_WALK_MS;
+    _lerpPos(p, targetX, targetY, 0.06);
+    // Walking bob
+    p.position.z = Math.sin(elapsed * 0.015) * 6;
+    return;
+  }
+
+  // Brewing phase: COFFEE_WALK_MS → COFFEE_WALK_MS + COFFEE_BREW_MS
+  if (elapsed < COFFEE_WALK_MS + COFFEE_BREW_MS) {
+    if (penguin.coffee_phase !== 'brewing') {
+      penguin.coffee_phase = 'brewing';
+      // Spawn cup mesh at brewing entry
+      const cup = makeCupMesh();
+      cup.position.set(targetX, targetY, 2);
+      scene.add(cup);
+      penguin.cup_mesh = cup;
+    }
+    // Fill cup: coffee level grows from 0 to ~70 (scale.y 0..70)
+    const brewT = (elapsed - COFFEE_WALK_MS) / COFFEE_BREW_MS;
+    if (penguin.cup_mesh && penguin.cup_mesh.userData.coffeeLevel) {
+      penguin.cup_mesh.userData.coffeeLevel.scale.y = 0.1 + brewT * 69.9;
+    }
+    // Penguin slight forward lean
+    p.rotation.x = -0.14 + 0.10;
+    p.position.z = 0;
+    return;
+  }
+
+  // Sipping phase: → COFFEE_WALK_MS + COFFEE_BREW_MS + COFFEE_SIP_MS
+  if (elapsed < COFFEE_WALK_MS + COFFEE_BREW_MS + COFFEE_SIP_MS) {
+    if (penguin.coffee_phase !== 'sipping') {
+      penguin.coffee_phase = 'sipping';
+      // Attach cup as child of penguin group
+      if (penguin.cup_mesh) {
+        scene.remove(penguin.cup_mesh);
+        p.add(penguin.cup_mesh);
+        penguin.cup_mesh.position.set(0, 0, 28); // above head
+      }
+    }
+    const sipElapsed = elapsed - COFFEE_WALK_MS - COFFEE_BREW_MS;
+    // Head nod
+    if (p.userData.head) {
+      p.userData.head.rotation.x = Math.sin(sipElapsed * 0.004) * 0.25;
+    }
+    // Cup-to-mouth lift every ~2.5s
+    if (penguin.cup_mesh) {
+      const liftCycle = (sipElapsed % 2500) / 2500;
+      const lift = liftCycle < 0.24 ? Math.sin(liftCycle / 0.24 * Math.PI) * 3 : 0;
+      penguin.cup_mesh.position.z = 28 + lift;
+    }
+    p.position.z = Math.sin(sipElapsed * 0.002) * 3;
+    return;
+  }
+
+  // Fading phase: → COFFEE_TOTAL_MS
+  if (elapsed < COFFEE_TOTAL_MS) {
+    if (penguin.coffee_phase !== 'fading') {
+      penguin.coffee_phase = 'fading';
+    }
+    const fadeT = (elapsed - (COFFEE_WALK_MS + COFFEE_BREW_MS + COFFEE_SIP_MS)) / COFFEE_FADE_MS;
+    const opacity = 1 - Math.min(1, fadeT);
+    // Fade all meshes in penguin group
+    p.traverse(child => {
+      if (child.material) {
+        child.material.transparent = true;
+        child.material.opacity = opacity;
+      }
+    });
+    // Scale down slightly
+    const sc = 0.95 - fadeT * 0.10;
+    p.scale.setScalar(Math.max(0.85, sc));
+    // Fade cup too
+    if (penguin.cup_mesh) {
+      penguin.cup_mesh.traverse(child => {
+        if (child.material) {
+          child.material.transparent = true;
+          child.material.opacity = opacity * 0.4; // glass was 0.4
+        }
+      });
+    }
+    return;
+  }
+
+  // Done
+  _coffeeDone(penguin, agentKey);
+}
+
+function _updateFruitPath(penguin, agentKey, elapsed, p, targetX, targetY) {
+  // Fruit plate position
+  const plateX = COFFEE_TABLE_POS.x + 25;
+  const plateY = COFFEE_TABLE_POS.y;
+
+  // Walking to fruit plate
+  if (elapsed < FRUIT_BITE_WALK_MS) {
+    penguin.coffee_phase = 'walking';
+    _lerpPos(p, plateX, plateY, 0.06);
+    p.position.z = Math.sin(elapsed * 0.015) * 6;
+    return;
+  }
+
+  // Pick + munch combined as fruit_bite phase
+  if (elapsed < FRUIT_BITE_WALK_MS + FRUIT_BITE_PICK_MS + FRUIT_BITE_MUNCH_MS) {
+    if (penguin.coffee_phase !== 'fruit_bite') {
+      penguin.coffee_phase = 'fruit_bite';
+      // Pick a random fruit — clone it
+      const fruits = coffeeStation.userData.fruits;
+      if (fruits && fruits.length > 0) {
+        const srcFruit = fruits[Math.floor(Math.random() * fruits.length)];
+        const clonedFruit = srcFruit.clone();
+        clonedFruit.position.set(0, 0, 22); // held above
+        p.add(clonedFruit);
+        penguin.fruit_held_mesh = clonedFruit;
+        // Shrink original slightly
+        srcFruit.scale.setScalar(0.7);
+        penguin._pickedFruit = srcFruit;
+      }
+    }
+    // Munch: rotate held fruit
+    if (penguin.fruit_held_mesh) {
+      penguin.fruit_held_mesh.rotation.y += 0.04;
+    }
+    p.position.z = Math.sin(elapsed * 0.003) * 3;
+    return;
+  }
+
+  // Fading
+  if (elapsed < FRUIT_BITE_TOTAL_MS) {
+    if (penguin.coffee_phase !== 'fading') {
+      penguin.coffee_phase = 'fading';
+    }
+    const fadeT = (elapsed - (FRUIT_BITE_WALK_MS + FRUIT_BITE_PICK_MS + FRUIT_BITE_MUNCH_MS)) / FRUIT_BITE_FADE_MS;
+    const opacity = 1 - Math.min(1, fadeT);
+    p.traverse(child => {
+      if (child.material) {
+        child.material.transparent = true;
+        child.material.opacity = opacity;
+      }
+    });
+    const sc = 0.95 - fadeT * 0.10;
+    p.scale.setScalar(Math.max(0.85, sc));
+    return;
+  }
+
+  // Done
+  // Restore fruit scale
+  if (penguin._pickedFruit) {
+    penguin._pickedFruit.scale.setScalar(1);
+    penguin._pickedFruit = null;
+  }
+  _coffeeDone(penguin, agentKey);
+}
+
+function _coffeeDone(penguin, agentKey) {
+  // Release slot
+  if (penguin.coffee_slot_idx !== null && penguin.coffee_slot_idx !== undefined) {
+    const s = COFFEE_SLOTS[penguin.coffee_slot_idx];
+    if (s) s.busy = false;
+  }
+  // Dispose cup mesh
+  if (penguin.cup_mesh) {
+    const p = penguin.mesh_group;
+    if (p) p.remove(penguin.cup_mesh);
+    else scene.remove(penguin.cup_mesh);
+    disposeCoffeeMesh(penguin.cup_mesh);
+    penguin.cup_mesh = null;
+  }
+  // Dispose fruit held mesh
+  if (penguin.fruit_held_mesh) {
+    const p = penguin.mesh_group;
+    if (p) p.remove(penguin.fruit_held_mesh);
+    disposeCoffeeMesh(penguin.fruit_held_mesh);
+    penguin.fruit_held_mesh = null;
+  }
+  // Remove penguin from scene
+  removePenguin3D(agentKey);
+}
+
+// ─────────────────────────────────────────────────────────
+//  REMOVE PENGUIN 3D — shared helper used by coffee done + fallback
+// ─────────────────────────────────────────────────────────
+function removePenguin3D(agentKey) {
+  const entry = penguinMap[agentKey];
+  if (!entry) return;
+
+  disposeMesh(entry.group);
+  scene.remove(entry.group);
+  if (entry.pointLight) scene.remove(entry.pointLight);
+  entry.labelEl.remove();
+
+  freeStations.push(entry.stationIdx);
+  freeStations.sort((a, b) => a - b);
+
+  delete stationColorMap[entry.stationIdx];
+  delete stationScrollOffset[entry.stationIdx];
+  bgDirty = true;
+
+  labelEls = labelEls.filter(item => item.agentKey !== agentKey);
+  delete penguinMap[agentKey];
 }
 
 // ═══════════════════════════════════════════════════════════
