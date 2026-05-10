@@ -2361,7 +2361,8 @@ function despawnPenguin(agentKey) {
   // Fallback: MIN_ALIVE_MS retire (coffee slots full)
   if (entry.spawnedAt && Date.now() - entry.spawnedAt < MIN_ALIVE_MS) {
     const remaining = MIN_ALIVE_MS - (Date.now() - entry.spawnedAt);
-    setTimeout(() => {
+    entry._fallbackTimer = setTimeout(() => {
+      entry._fallbackTimer = null;
       // Clean up coffeeData so removePenguin3D can proceed
       if (entry.coffeeData) entry.coffeeData = null;
       removePenguin3D(agentKey);
@@ -3422,13 +3423,13 @@ const COFFEE_WALK_MS       = 2000;
 const COFFEE_BREW_MS       = 3000;
 const COFFEE_SIP_MS        = 9000;
 const COFFEE_FADE_MS       = 1000;
-const COFFEE_TOTAL_MS      = 15000;
+const COFFEE_TOTAL_MS      = COFFEE_WALK_MS + COFFEE_BREW_MS + COFFEE_SIP_MS + COFFEE_FADE_MS;
 const FRUIT_BITE_PROBABILITY = 0.1;
 const FRUIT_BITE_WALK_MS   = 2000;
 const FRUIT_BITE_PICK_MS   = 2000;
 const FRUIT_BITE_MUNCH_MS  = 9000;
 const FRUIT_BITE_FADE_MS   = 1000;
-const FRUIT_BITE_TOTAL_MS  = 14000;
+const FRUIT_BITE_TOTAL_MS  = FRUIT_BITE_WALK_MS + FRUIT_BITE_PICK_MS + FRUIT_BITE_MUNCH_MS + FRUIT_BITE_FADE_MS;
 
 // Slot world positions (6 positions around coffee table)
 const COFFEE_SLOTS = Array.from({ length: COFFEE_SLOTS_COUNT }, (_, i) => {
@@ -3593,6 +3594,9 @@ function startCoffeeAnimation(penguin) {
   penguin.coffee_target_mode = Math.random() < FRUIT_BITE_PROBABILITY ? 'fruit' : 'machine';
   penguin.cup_mesh          = null;
   penguin.fruit_held_mesh   = null;
+  // Capture start position for deterministic time-based walking interpolation
+  const mg = penguin.mesh_group;
+  penguin.coffee_start_pos  = { x: mg.position.x, y: mg.position.y };
 }
 
 // ─────────────────────────────────────────────────────────
@@ -3615,17 +3619,17 @@ function updateCoffeePhase(penguin, agentKey) {
   }
 }
 
-function _lerpPos(p, targetX, targetY, alpha) {
-  p.position.x += (targetX - p.position.x) * alpha;
-  p.position.y += (targetY - p.position.y) * alpha;
+function _walkPos(p, startPos, targetX, targetY, walkT) {
+  p.position.x = startPos.x + (targetX - startPos.x) * walkT;
+  p.position.y = startPos.y + (targetY - startPos.y) * walkT;
 }
 
 function _updateMachinePath(penguin, agentKey, elapsed, p, targetX, targetY) {
   // Walking phase: 0 → COFFEE_WALK_MS
   if (elapsed < COFFEE_WALK_MS) {
     penguin.coffee_phase = 'walking';
-    const walkT = elapsed / COFFEE_WALK_MS;
-    _lerpPos(p, targetX, targetY, 0.06);
+    const walkT = Math.min(1, elapsed / COFFEE_WALK_MS);
+    _walkPos(p, penguin.coffee_start_pos, targetX, targetY, walkT);
     // Walking bob
     p.position.z = Math.sin(elapsed * 0.015) * 6;
     return;
@@ -3646,8 +3650,8 @@ function _updateMachinePath(penguin, agentKey, elapsed, p, targetX, targetY) {
     if (penguin.cup_mesh && penguin.cup_mesh.userData.coffeeLevel) {
       penguin.cup_mesh.userData.coffeeLevel.scale.y = 0.1 + brewT * 69.9;
     }
-    // Penguin slight forward lean
-    p.rotation.x = -0.14 + 0.10;
+    // Penguin slight forward lean (-0.04 rad ≈ -2.3°)
+    p.rotation.x = -0.04;
     p.position.z = 0;
     return;
   }
@@ -3656,6 +3660,8 @@ function _updateMachinePath(penguin, agentKey, elapsed, p, targetX, targetY) {
   if (elapsed < COFFEE_WALK_MS + COFFEE_BREW_MS + COFFEE_SIP_MS) {
     if (penguin.coffee_phase !== 'sipping') {
       penguin.coffee_phase = 'sipping';
+      // Reset forward lean from brewing phase
+      p.rotation.x = 0;
       // Attach cup as child of penguin group
       if (penguin.cup_mesh) {
         scene.remove(penguin.cup_mesh);
@@ -3719,7 +3725,8 @@ function _updateFruitPath(penguin, agentKey, elapsed, p, targetX, targetY) {
   // Walking to fruit plate
   if (elapsed < FRUIT_BITE_WALK_MS) {
     penguin.coffee_phase = 'walking';
-    _lerpPos(p, plateX, plateY, 0.06);
+    const walkT = Math.min(1, elapsed / FRUIT_BITE_WALK_MS);
+    _walkPos(p, penguin.coffee_start_pos, plateX, plateY, walkT);
     p.position.z = Math.sin(elapsed * 0.015) * 6;
     return;
   }
@@ -3736,8 +3743,9 @@ function _updateFruitPath(penguin, agentKey, elapsed, p, targetX, targetY) {
         clonedFruit.position.set(0, 0, 22); // held above
         p.add(clonedFruit);
         penguin.fruit_held_mesh = clonedFruit;
-        // Shrink original slightly
-        srcFruit.scale.setScalar(0.7);
+        // Refcount-based shrink: only shrink on first pick, restore on last release
+        srcFruit.userData._pickRefs = (srcFruit.userData._pickRefs || 0) + 1;
+        if (srcFruit.userData._pickRefs === 1) srcFruit.scale.setScalar(0.7);
         penguin._pickedFruit = srcFruit;
       }
     }
@@ -3768,9 +3776,11 @@ function _updateFruitPath(penguin, agentKey, elapsed, p, targetX, targetY) {
   }
 
   // Done
-  // Restore fruit scale
+  // Restore fruit scale via refcount
   if (penguin._pickedFruit) {
-    penguin._pickedFruit.scale.setScalar(1);
+    const fruit = penguin._pickedFruit;
+    fruit.userData._pickRefs = Math.max(0, (fruit.userData._pickRefs || 1) - 1);
+    if (fruit.userData._pickRefs === 0) fruit.scale.setScalar(1);
     penguin._pickedFruit = null;
   }
   _coffeeDone(penguin, agentKey);
@@ -3785,7 +3795,7 @@ function _coffeeDone(penguin, agentKey) {
   // Dispose cup mesh
   if (penguin.cup_mesh) {
     const p = penguin.mesh_group;
-    if (p) p.remove(penguin.cup_mesh);
+    if (p && p.parent) p.remove(penguin.cup_mesh);
     else scene.remove(penguin.cup_mesh);
     disposeCoffeeMesh(penguin.cup_mesh);
     penguin.cup_mesh = null;
@@ -3793,10 +3803,13 @@ function _coffeeDone(penguin, agentKey) {
   // Dispose fruit held mesh
   if (penguin.fruit_held_mesh) {
     const p = penguin.mesh_group;
-    if (p) p.remove(penguin.fruit_held_mesh);
+    if (p && p.parent) p.remove(penguin.fruit_held_mesh);
+    else scene.remove(penguin.fruit_held_mesh);
     disposeCoffeeMesh(penguin.fruit_held_mesh);
     penguin.fruit_held_mesh = null;
   }
+  // Reset any rotation applied during animation
+  if (penguin.mesh_group) penguin.mesh_group.rotation.x = 0;
   // Remove penguin from scene
   removePenguin3D(agentKey);
 }
@@ -3807,6 +3820,12 @@ function _coffeeDone(penguin, agentKey) {
 function removePenguin3D(agentKey) {
   const entry = penguinMap[agentKey];
   if (!entry) return;
+
+  // Cancel any pending fallback timer to prevent double-remove
+  if (entry._fallbackTimer) {
+    clearTimeout(entry._fallbackTimer);
+    entry._fallbackTimer = null;
+  }
 
   disposeMesh(entry.group);
   scene.remove(entry.group);

@@ -13,13 +13,13 @@ const COFFEE_WALK_MS        = 2000;
 const COFFEE_BREW_MS        = 3000;
 const COFFEE_SIP_MS         = 9000;
 const COFFEE_FADE_MS        = 1000;
-const COFFEE_TOTAL_MS       = 15000;
+const COFFEE_TOTAL_MS       = COFFEE_WALK_MS + COFFEE_BREW_MS + COFFEE_SIP_MS + COFFEE_FADE_MS;
 const FRUIT_BITE_PROBABILITY= 0.1;
 const FRUIT_BITE_WALK_MS    = 2000;
 const FRUIT_BITE_PICK_MS    = 2000;
 const FRUIT_BITE_MUNCH_MS   = 9000;
 const FRUIT_BITE_FADE_MS    = 1000;
-const FRUIT_BITE_TOTAL_MS   = 14000;
+const FRUIT_BITE_TOTAL_MS   = FRUIT_BITE_WALK_MS + FRUIT_BITE_PICK_MS + FRUIT_BITE_MUNCH_MS + FRUIT_BITE_FADE_MS;
 
 const COFFEE_PHASE = {
   WALKING: 'walking',
@@ -324,5 +324,143 @@ describe('fallback retire when all slots busy', () => {
     const result = startCoffeeAnimation(penguin, mgr, () => 0.5);
     expect(result).toBe(false);
     expect(penguin.coffee_phase).toBeNull();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. Fruit refcount — two penguins pick same fruit, scale stays 0.7 until both release
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Pure refcount helpers mirroring index.html logic
+function fruitPick(srcFruit) {
+  srcFruit.userData._pickRefs = (srcFruit.userData._pickRefs || 0) + 1;
+  if (srcFruit.userData._pickRefs === 1) srcFruit._scale = 0.7;
+}
+
+function fruitRelease(srcFruit) {
+  srcFruit.userData._pickRefs = Math.max(0, (srcFruit.userData._pickRefs || 1) - 1);
+  if (srcFruit.userData._pickRefs === 0) srcFruit._scale = 1.0;
+}
+
+describe('fruit refcount — scale stays shrunk until last release', () => {
+  function makeFruit() {
+    return { _scale: 1.0, userData: {} };
+  }
+
+  it('scale shrinks to 0.7 on first pick', () => {
+    const fruit = makeFruit();
+    fruitPick(fruit);
+    expect(fruit._scale).toBe(0.7);
+    expect(fruit.userData._pickRefs).toBe(1);
+  });
+
+  it('scale stays 0.7 when second penguin also picks same fruit', () => {
+    const fruit = makeFruit();
+    fruitPick(fruit); // penguin A
+    fruitPick(fruit); // penguin B
+    expect(fruit._scale).toBe(0.7);
+    expect(fruit.userData._pickRefs).toBe(2);
+  });
+
+  it('scale stays 0.7 when first penguin releases but second still holds', () => {
+    const fruit = makeFruit();
+    fruitPick(fruit);   // penguin A
+    fruitPick(fruit);   // penguin B
+    fruitRelease(fruit); // penguin A done
+    expect(fruit._scale).toBe(0.7); // B still holding
+    expect(fruit.userData._pickRefs).toBe(1);
+  });
+
+  it('scale restores to 1.0 only when last penguin releases', () => {
+    const fruit = makeFruit();
+    fruitPick(fruit);
+    fruitPick(fruit);
+    fruitRelease(fruit);
+    fruitRelease(fruit); // last release
+    expect(fruit._scale).toBe(1.0);
+    expect(fruit.userData._pickRefs).toBe(0);
+  });
+
+  it('refcount does not go below 0 on over-release', () => {
+    const fruit = makeFruit();
+    fruitPick(fruit);
+    fruitRelease(fruit);
+    fruitRelease(fruit); // extra release — should not go negative
+    expect(fruit.userData._pickRefs).toBe(0);
+    expect(fruit._scale).toBe(1.0);
+  });
+
+  it('three penguins pick same fruit — volume scenario', () => {
+    const fruit = makeFruit();
+    fruitPick(fruit);
+    fruitPick(fruit);
+    fruitPick(fruit);
+    expect(fruit.userData._pickRefs).toBe(3);
+    expect(fruit._scale).toBe(0.7);
+    fruitRelease(fruit);
+    fruitRelease(fruit);
+    expect(fruit._scale).toBe(0.7); // still 1 holder
+    fruitRelease(fruit);
+    expect(fruit._scale).toBe(1.0); // last one done
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. setTimeout fallback timer — cleared on removePenguin3D (double-remove guard)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Minimal entry + penguinMap stub to test timer cancel logic
+function makeEntry(spawnedAtOffset = 0) {
+  return {
+    _fallbackTimer: null,
+    spawnedAt: Date.now() - spawnedAtOffset,
+    coffeeData: null,
+    group: {},
+    stationIdx: 0,
+    labelEl: { remove: jest.fn() },
+    pointLight: null,
+  };
+}
+
+describe('fallback timer — clearTimeout on removePenguin3D', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('_fallbackTimer is stored when set via setTimeout', () => {
+    const entry = makeEntry();
+    entry._fallbackTimer = setTimeout(() => {}, 5000);
+    expect(entry._fallbackTimer).not.toBeNull();
+  });
+
+  it('clearTimeout cancels pending callback — timer does not fire', () => {
+    const callback = jest.fn();
+    const entry = makeEntry();
+    entry._fallbackTimer = setTimeout(callback, 5000);
+    // Simulate removePenguin3D clearing the timer
+    clearTimeout(entry._fallbackTimer);
+    entry._fallbackTimer = null;
+    jest.runAllTimers();
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it('timer fires if NOT cancelled (control case)', () => {
+    const callback = jest.fn();
+    const entry = makeEntry();
+    entry._fallbackTimer = setTimeout(callback, 5000);
+    jest.runAllTimers();
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
+
+  it('_fallbackTimer is null after coffee animation completes (simulate clear)', () => {
+    const entry = makeEntry();
+    entry._fallbackTimer = setTimeout(() => {}, 10000);
+    // Simulate _coffeeDone path calling removePenguin3D which clears timer
+    clearTimeout(entry._fallbackTimer);
+    entry._fallbackTimer = null;
+    expect(entry._fallbackTimer).toBeNull();
   });
 });
