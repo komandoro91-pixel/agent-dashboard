@@ -150,5 +150,9 @@
   {
     "date": "2026-05-10",
     "note": "Glowing separator line on h-meta border"
+  },
+  {
+    "date": "2026-05-11",
+    "note": "Glowing focus ring on nav-btn focus-visible"
   }
 ]
