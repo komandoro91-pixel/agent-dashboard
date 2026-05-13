@@ -158,5 +158,9 @@
   {
     "date": "2026-05-12",
     "note": "Shimmer sweep on metric card hover"
+  },
+  {
+    "date": "2026-05-13",
+    "note": "Glowing tinted top edge accent on metric cards"
   }
 ]
