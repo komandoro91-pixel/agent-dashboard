@@ -111,10 +111,16 @@ header{
   border-radius:20px;font-size:11px;color:var(--indigo);font-weight:500;
   white-space:nowrap;
   transition:background .25s,border-color .25s,box-shadow .25s;
+  animation:release-chip-pulse 4s ease-in-out infinite;
+}
+@keyframes release-chip-pulse{
+  0%,100%{box-shadow:0 0 4px rgba(129,140,248,.10),inset 0 0 4px rgba(129,140,248,.06)}
+  50%{box-shadow:0 0 10px rgba(129,140,248,.30),inset 0 0 10px rgba(129,140,248,.14)}
 }
 .release-chip:hover{
   background:rgba(129,140,248,.18);border-color:rgba(129,140,248,.40);
-  box-shadow:0 0 8px rgba(129,140,248,.22),inset 0 0 8px rgba(129,140,248,.08);
+  box-shadow:0 0 14px rgba(129,140,248,.40),inset 0 0 10px rgba(129,140,248,.14);
+  animation:none;
 }
 .release-chip-label{opacity:.6;margin-right:2px}
 @keyframes lp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
