@@ -166,5 +166,9 @@
   {
     "date": "2026-05-14",
     "note": "Glowing badge pulse on release-chip"
+  },
+  {
+    "date": "2026-05-15",
+    "note": "Glowing text shimmer on logo-text hover"
   }
 ]

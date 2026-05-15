@@ -82,6 +82,17 @@ header{
   font-size:14px;font-weight:600;
   background:linear-gradient(90deg,var(--text),var(--dim));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  transition:filter .3s ease;
+}
+.logo-wrap:hover .logo-text{
+  background:linear-gradient(90deg,var(--indigo),var(--cyan),var(--purple));
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  animation:logo-text-shimmer 2s linear infinite;
+}
+@keyframes logo-text-shimmer{
+  0%{background-position:0% 50%}
+  100%{background-position:200% 50%}
 }
 .live-chip{
   display:flex;align-items:center;gap:5px;
