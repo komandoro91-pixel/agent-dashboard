@@ -53,6 +53,11 @@ header{
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   text-shadow:none;
   animation:clock-gradient 6s ease infinite;
+  transition:filter .4s ease;
+}
+.h-clock:hover{
+  filter:drop-shadow(0 0 8px rgba(129,140,248,.70)) drop-shadow(0 0 16px rgba(34,211,238,.40));
+  animation:clock-gradient 2s ease infinite;
 }
 @keyframes clock-gradient{
   0%{background-position:0% 50%}
