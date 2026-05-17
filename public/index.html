@@ -73,6 +73,12 @@ header{
   position:relative;overflow:hidden;
   box-shadow:0 0 8px rgba(129,140,248,.30),inset 0 1px 0 rgba(255,255,255,.20);
   animation:logo-pulse 4s ease-in-out infinite;
+  transition:box-shadow .3s ease,filter .3s ease;
+}
+.logo-wrap:hover .logo-icon{
+  box-shadow:0 0 16px rgba(129,140,248,.70),0 0 28px rgba(167,139,250,.35),inset 0 1px 0 rgba(255,255,255,.35);
+  filter:brightness(1.18) saturate(1.2);
+  animation:none;
 }
 .logo-icon::after{
   content:'';position:absolute;inset:0;border-radius:6px;
