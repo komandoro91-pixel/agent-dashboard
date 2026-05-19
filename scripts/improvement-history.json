@@ -182,5 +182,9 @@
   {
     "date": "2026-05-18",
     "note": "Animated gradient border on live-chip hover"
+  },
+  {
+    "date": "2026-05-19",
+    "note": "Pulsing glow ring on live-dot expand"
   }
 ]
