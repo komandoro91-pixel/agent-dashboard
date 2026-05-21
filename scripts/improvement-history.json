@@ -190,5 +190,9 @@
   {
     "date": "2026-05-20",
     "note": "Frosted hover glow on nav-btn active state"
+  },
+  {
+    "date": "2026-05-21",
+    "note": "Glowing separator between header sections"
   }
 ]
