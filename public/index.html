@@ -175,6 +175,11 @@ header>*{position:relative;}
 }
 .metric-card{
   animation:metric-card-in .5s cubic-bezier(.22,.68,0,1.2) both;
+  transition:transform .25s cubic-bezier(.22,.68,0,1.2),box-shadow .25s ease;
+}
+.metric-card:hover{
+  transform:translateY(-2px) scale(1.012);
+  box-shadow:0 6px 24px rgba(129,140,248,.18),0 2px 8px rgba(129,140,248,.10),inset 0 0 0 1px rgba(129,140,248,.14);
 }
 .metric-card:nth-child(1){animation-delay:.05s}
 .metric-card:nth-child(2){animation-delay:.12s}
