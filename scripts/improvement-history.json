@@ -210,5 +210,9 @@
   {
     "date": "2026-05-25",
     "note": "Subtle shimmer hover on timeline rows"
+  },
+  {
+    "date": "2026-05-26",
+    "note": "Glowing icon on metric card hover"
   }
 ]
