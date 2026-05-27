@@ -177,6 +177,19 @@ header>*{position:relative;}
   animation:metric-card-in .5s cubic-bezier(.22,.68,0,1.2) both;
   transition:transform .25s cubic-bezier(.22,.68,0,1.2),box-shadow .25s ease;
 }
+.metric-card::before{
+  content:'';
+  position:absolute;top:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(129,140,248,.55),rgba(167,139,250,.45),transparent);
+  border-radius:1px;
+  animation:mc-top-accent 5s ease-in-out infinite;
+  pointer-events:none;
+  z-index:1;
+}
+@keyframes mc-top-accent{
+  0%,100%{opacity:.45;filter:blur(0px)}
+  50%{opacity:.95;filter:blur(.6px) drop-shadow(0 0 4px rgba(129,140,248,.70))}
+}
 .metric-card:hover{
   transform:translateY(-2px) scale(1.012);
   box-shadow:0 6px 24px rgba(129,140,248,.18),0 2px 8px rgba(129,140,248,.10),inset 0 0 0 1px rgba(129,140,248,.14);

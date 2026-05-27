@@ -214,5 +214,9 @@
   {
     "date": "2026-05-26",
     "note": "Glowing icon on metric card hover"
+  },
+  {
+    "date": "2026-05-27",
+    "note": "Subtle glow pulse on metric card top accent"
   }
 ]
