@@ -172,6 +172,22 @@ header>*{position:relative;}
   white-space:nowrap;
   transition:background .25s,border-color .25s,box-shadow .25s;
   animation:release-chip-pulse 4s ease-in-out infinite;
+  position:relative;
+  overflow:hidden;
+}
+.release-chip::after{
+  content:'';
+  position:absolute;
+  bottom:0;left:-100%;width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--indigo),var(--purple),transparent);
+  animation:release-chip-sweep 3s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes release-chip-sweep{
+  0%{left:-100%;opacity:0}
+  20%{opacity:1}
+  80%{opacity:1}
+  100%{left:100%;opacity:0}
 }
 .metric-card{
   animation:metric-card-in .5s cubic-bezier(.22,.68,0,1.2) both;
