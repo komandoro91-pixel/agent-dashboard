@@ -191,7 +191,13 @@ header>*{position:relative;}
 }
 .metric-card{
   animation:metric-card-in .5s cubic-bezier(.22,.68,0,1.2) both;
-  transition:transform .25s cubic-bezier(.22,.68,0,1.2),box-shadow .25s ease;
+  transition:transform .25s cubic-bezier(.22,.68,0,1.2),box-shadow .25s ease,outline-color .25s ease;
+  outline:1.5px solid transparent;
+  outline-offset:2px;
+}
+.metric-card:hover{
+  outline-color:rgba(129,140,248,.22);
+  outline-offset:3px;
 }
 .metric-card::before{
   content:'';
