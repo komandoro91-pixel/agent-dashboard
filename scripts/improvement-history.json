@@ -226,5 +226,9 @@
   {
     "date": "2026-05-29",
     "note": "Frosted depth ring on metric card hover"
+  },
+  {
+    "date": "2026-05-30",
+    "note": "Twinkling star particles on bg blobs"
   }
 ]
