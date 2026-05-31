@@ -93,8 +93,12 @@ header>*{position:relative;}
   background-size:300% 300%;
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   text-shadow:none;
-  animation:clock-gradient 6s ease infinite;
+  animation:clock-gradient 6s ease infinite,clock-breathe 4s ease-in-out infinite;
   transition:filter .4s ease;
+}
+@keyframes clock-breathe{
+  0%,100%{filter:drop-shadow(0 0 0px rgba(129,140,248,0))}
+  50%{filter:drop-shadow(0 0 6px rgba(129,140,248,.45)) drop-shadow(0 0 12px rgba(34,211,238,.20))}
 }
 .h-clock:hover{
   filter:drop-shadow(0 0 8px rgba(129,140,248,.70)) drop-shadow(0 0 16px rgba(34,211,238,.40));
