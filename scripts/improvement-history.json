@@ -234,5 +234,9 @@
   {
     "date": "2026-05-31",
     "note": "Breathing glow on clock hover idle state"
+  },
+  {
+    "date": "2026-06-01",
+    "note": "Shimmer sweep on logo-icon hover"
   }
 ]

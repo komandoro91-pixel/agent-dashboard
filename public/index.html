@@ -129,6 +129,16 @@ header>*{position:relative;}
   content:'';position:absolute;inset:0;border-radius:6px;
   background:linear-gradient(135deg,rgba(255,255,255,.22) 0%,transparent 55%,rgba(167,139,250,.15) 100%);
   pointer-events:none;
+  transition:opacity .3s ease;
+}
+.logo-wrap:hover .logo-icon::after{
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);
+  background-size:200% 200%;
+  animation:logo-icon-shimmer .8s ease forwards;
+}
+@keyframes logo-icon-shimmer{
+  0%{background-position:200% 0%}
+  100%{background-position:-50% 0%}
 }
 @keyframes logo-pulse{
   0%,100%{box-shadow:0 0 8px rgba(129,140,248,.30),inset 0 1px 0 rgba(255,255,255,.20)}
