@@ -160,6 +160,17 @@ header>*{position:relative;}
   0%{background-position:0% 50%}
   100%{background-position:200% 50%}
 }
+.live-chip-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 6px rgba(52,211,153,.8);
+  animation:live-dot-pulse 1.5s ease-in-out infinite;
+  flex-shrink:0;
+}
+@keyframes live-dot-pulse{
+  0%,100%{transform:scale(1);opacity:1;box-shadow:0 0 4px rgba(52,211,153,.7)}
+  50%{transform:scale(1.5);opacity:.6;box-shadow:0 0 10px rgba(52,211,153,1),0 0 18px rgba(34,211,238,.5)}
+}
 .live-chip{
   display:flex;align-items:center;gap:5px;
   padding:3px 10px;
