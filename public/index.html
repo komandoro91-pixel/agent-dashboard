@@ -146,9 +146,15 @@ header>*{position:relative;}
 }
 .logo-text{
   font-size:14px;font-weight:600;
-  background:linear-gradient(90deg,var(--text),var(--dim));
+  background:linear-gradient(90deg,var(--text),var(--dim),var(--indigo),var(--text));
+  background-size:300% 100%;
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:logo-text-idle 8s linear infinite;
   transition:filter .3s ease;
+}
+@keyframes logo-text-idle{
+  0%{background-position:0% 50%}
+  100%{background-position:300% 50%}
 }
 .logo-wrap:hover .logo-text{
   background:linear-gradient(90deg,var(--indigo),var(--cyan),var(--purple));
