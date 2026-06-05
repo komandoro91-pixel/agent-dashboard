@@ -123,7 +123,12 @@ header>*{position:relative;}
 .logo-wrap:hover .logo-icon{
   box-shadow:0 0 16px rgba(129,140,248,.70),0 0 28px rgba(167,139,250,.35),inset 0 1px 0 rgba(255,255,255,.35);
   filter:brightness(1.18) saturate(1.2);
-  animation:none;
+  animation:logo-icon-spin .6s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+@keyframes logo-icon-spin{
+  0%{transform:rotate(0deg) scale(1)}
+  60%{transform:rotate(18deg) scale(1.13)}
+  100%{transform:rotate(0deg) scale(1.08)}
 }
 .logo-icon::after{
   content:'';position:absolute;inset:0;border-radius:6px;

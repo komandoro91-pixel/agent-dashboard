@@ -250,5 +250,9 @@
   {
     "date": "2026-06-04",
     "note": "Gradient text shimmer on logo-text idle"
+  },
+  {
+    "date": "2026-06-05",
+    "note": "Subtle rotate+glow on logo-icon hover"
   }
 ]
