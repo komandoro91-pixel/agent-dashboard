@@ -167,6 +167,18 @@ header>*{position:relative;}
   -webkit-background-clip:text;background-clip:text;
   animation:logo-text-shimmer 2s linear infinite;
 }
+.metric-val{
+  transition:text-shadow .4s ease,filter .4s ease;
+}
+.metric-card:hover .metric-val{
+  text-shadow:0 0 12px currentColor,0 0 24px currentColor;
+  filter:brightness(1.25) drop-shadow(0 0 6px currentColor);
+  animation:metric-val-glow 2s ease-in-out infinite;
+}
+@keyframes metric-val-glow{
+  0%,100%{filter:brightness(1.15) drop-shadow(0 0 4px currentColor)}
+  50%{filter:brightness(1.35) drop-shadow(0 0 10px currentColor) drop-shadow(0 0 20px currentColor)}
+}
 @keyframes logo-text-shimmer{
   0%{background-position:0% 50%}
   100%{background-position:200% 50%}
