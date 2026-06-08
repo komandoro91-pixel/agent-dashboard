@@ -262,5 +262,9 @@
   {
     "date": "2026-06-07",
     "note": "Neon glow pulse on active metric values"
+  },
+  {
+    "date": "2026-06-08",
+    "note": "Soft glow trail on nav-btn active state"
   }
 ]

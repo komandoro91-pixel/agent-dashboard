@@ -157,6 +157,23 @@ header>*{position:relative;}
   animation:logo-text-idle 8s linear infinite;
   transition:filter .3s ease;
 }
+.nav-btn{
+  position:relative;
+  overflow:hidden;
+}
+.nav-btn.active::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  background:radial-gradient(ellipse at 50% 120%,rgba(129,140,248,.28) 0%,transparent 70%);
+  animation:nav-active-glow 3s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes nav-active-glow{
+  0%,100%{opacity:.6;transform:scaleX(1)}
+  50%{opacity:1;transform:scaleX(1.08)}
+}
 @keyframes logo-text-idle{
   0%{background-position:0% 50%}
   100%{background-position:300% 50%}
