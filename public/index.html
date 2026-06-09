@@ -192,6 +192,25 @@ header>*{position:relative;}
   filter:brightness(1.25) drop-shadow(0 0 6px currentColor);
   animation:metric-val-glow 2s ease-in-out infinite;
 }
+.metric-card::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:var(--r);
+  background:linear-gradient(135deg,rgba(255,255,255,.07) 0%,transparent 45%,rgba(255,255,255,.04) 100%);
+  opacity:0;
+  transition:opacity .4s ease;
+  pointer-events:none;
+  z-index:1;
+}
+.metric-card:hover::after{
+  opacity:1;
+  animation:card-frost-shimmer 2.5s ease-in-out infinite;
+}
+@keyframes card-frost-shimmer{
+  0%,100%{background:linear-gradient(135deg,rgba(255,255,255,.07) 0%,transparent 45%,rgba(255,255,255,.04) 100%);}
+  50%{background:linear-gradient(135deg,rgba(255,255,255,.12) 0%,transparent 50%,rgba(255,255,255,.07) 100%);}
+}
 @keyframes metric-val-glow{
   0%,100%{filter:brightness(1.15) drop-shadow(0 0 4px currentColor)}
   50%{filter:brightness(1.35) drop-shadow(0 0 10px currentColor) drop-shadow(0 0 20px currentColor)}
