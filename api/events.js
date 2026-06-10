@@ -5,6 +5,12 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-cache');
 
+  const expected = process.env.COLLECT_TOKEN || '';
+  const token = req.headers['x-token'] || (req.query && req.query.token) || '';
+  if (expected && token !== expected) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+
   const since = parseFloat(req.query.since || '0');
   const limit = parseInt(req.query.limit || '150', 10);
 

@@ -10,6 +10,7 @@ module.exports = async function handler(req, res) {
 
   const token = req.headers['x-token'] || '';
   const expected = process.env.COLLECT_TOKEN || '';
+  // Fail-closed: missing COLLECT_TOKEN must not silently open the write endpoint
   if (!expected || token !== expected) return res.status(401).send('Unauthorized');
 
   const event = req.body;

@@ -124,6 +124,13 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-cache');
 
+  // Events contain cwd paths and bash commands — reads require the same token as writes
+  const expected = process.env.COLLECT_TOKEN || '';
+  const token = req.headers['x-token'] || (req.query && req.query.token) || '';
+  if (expected && token !== expected) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+
   const r = new Redis({
     url: process.env.UPSTASH_REDIS_REST_URL,
     token: process.env.UPSTASH_REDIS_REST_TOKEN,

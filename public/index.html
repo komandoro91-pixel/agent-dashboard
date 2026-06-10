@@ -1280,6 +1280,8 @@ const AGENT_COLORS = {
   'Plan':                    {bg:'rgba(129,140,248,.15)',  fg:'#818cf8'},
   'general-purpose':         {bg:'rgba(232,121,249,.18)',  fg:'#e879f9'},
   'gemini-scout':            {bg:'rgba(245,158,11,.15)',   fg:'#f59e0b'},
+  'librarian':               {bg:'rgba(192,132,252,.15)',  fg:'#c084fc'},
+  'claude':                  {bg:'rgba(103,232,249,.15)',  fg:'#67e8f9'},
 };
 function agentColor(role){ return AGENT_COLORS[role]||{bg:'rgba(148,163,184,.15)',fg:'#94a3b8'}; }
 
@@ -2592,7 +2594,11 @@ function spawnPenguin(agentKey, agentType, provider, sessionId) {
   if (freeStations.length > 0) {
     stationIdx = freeStations.shift();
   } else {
-    stationIdx = Object.keys(penguinMap).length + freeStations.length;
+    // First unused overflow index — count-based idx collides when a reclaimed
+    // overflow desk is re-occupied while higher indices are still active
+    const used = new Set(Object.values(penguinMap).map(e => e.stationIdx));
+    stationIdx = NUM_DESKS;
+    while (used.has(stationIdx)) stationIdx++;
   }
 
   const st = getStation(stationIdx);
@@ -3165,11 +3171,27 @@ let lastEventTs = 0;
 let isFetchingState = false;
 let isFetchingEvents = false;
 
+// Read token from ?token= (persisted to localStorage) — required by Vercel API
+// when COLLECT_TOKEN is set; local server.py ignores the extra param
+const API_TOKEN = (() => {
+  let t = '';
+  try {
+    t = new URLSearchParams(location.search).get('token') || '';
+    if (t) localStorage.setItem('dash_token', t);
+    else t = localStorage.getItem('dash_token') || '';
+  } catch (_) {}
+  return t;
+})();
+function apiUrl(path) {
+  if (!API_TOKEN) return path;
+  return path + (path.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(API_TOKEN);
+}
+
 async function fetchState() {
   if (isFetchingState) return;
   isFetchingState = true;
   try {
-    const res = await fetch('/api/state');
+    const res = await fetch(apiUrl('/api/state'));
     if (!res.ok) return;
     const data = await res.json();
     applyState(data);
@@ -3182,7 +3204,7 @@ async function fetchEvents() {
   if (isFetchingEvents) return;
   isFetchingEvents = true;
   try {
-    const res = await fetch('/api/events?since=' + lastEventTs + '&limit=50');
+    const res = await fetch(apiUrl('/api/events?since=' + lastEventTs + '&limit=50'));
     if (!res.ok) return;
     const events = await res.json(); // newest-first from API
     if (events.length > 0) {
@@ -4179,7 +4201,7 @@ renderMetrics();
 
 async function fetchRelease() {
   try {
-    const r = await fetch('/api/release');
+    const r = await fetch(apiUrl('/api/release'));
     const data = await r.json();
     if (data.ts) {
       const d = new Date(data.ts * 1000);
