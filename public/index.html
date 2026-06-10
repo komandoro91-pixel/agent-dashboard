@@ -160,6 +160,15 @@ header>*{position:relative;}
 .nav-btn{
   position:relative;
   overflow:hidden;
+  transition:box-shadow .25s ease;
+}
+.nav-btn:active{
+  box-shadow:0 0 0 3px rgba(129,140,248,.25),0 0 14px rgba(129,140,248,.20);
+  animation:nav-btn-ripple .4s ease-out forwards;
+}
+@keyframes nav-btn-ripple{
+  0%{box-shadow:0 0 0 0px rgba(129,140,248,.45),0 0 8px rgba(129,140,248,.30)}
+  100%{box-shadow:0 0 0 6px rgba(129,140,248,.0),0 0 0px rgba(129,140,248,.0)}
 }
 .nav-btn.active::before{
   content:'';

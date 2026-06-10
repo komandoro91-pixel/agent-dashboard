@@ -270,5 +270,9 @@
   {
     "date": "2026-06-09",
     "note": "Frosted glass shimmer on card hover"
+  },
+  {
+    "date": "2026-06-10",
+    "note": "Ripple glow on nav-btn click"
   }
 ]
