@@ -3187,11 +3187,40 @@ function apiUrl(path) {
   return path + (path.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(API_TOKEN);
 }
 
+// 401 → токен не задан/неверный: показать prompt вместо молчаливо пустого дашборда
+let tokenPromptShown = false;
+function showTokenPrompt() {
+  if (tokenPromptShown) return;
+  tokenPromptShown = true;
+  const wrongToken = !!API_TOKEN;
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;background:rgba(2,3,8,.9);z-index:999;display:flex;align-items:center;justify-content:center';
+  d.innerHTML = `<div style="background:#0b0d18;border:1px solid rgba(129,140,248,.35);border-radius:12px;padding:28px 32px;max-width:400px;text-align:center;font-family:inherit">
+    <div style="font-size:22px;margin-bottom:10px">🔒</div>
+    <div style="font-size:15px;font-weight:600;margin-bottom:8px">${wrongToken ? 'Токен не подходит' : 'Нужен токен доступа'}</div>
+    <div style="font-size:12px;color:#94a3b8;line-height:1.5;margin-bottom:16px">API дашборда защищён. Вставь <b style="color:#cbd5e1">COLLECT_TOKEN</b> (из <span style="font-family:monospace">.env</span> проекта agent-dashboard) — сохранится в этом браузере.</div>
+    <input id="tok-in" type="password" autocomplete="off" placeholder="COLLECT_TOKEN" style="width:100%;padding:9px 11px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#f1f5f9;font-family:monospace;font-size:13px;outline:none">
+    <button id="tok-go" style="margin-top:14px;padding:8px 26px;border-radius:7px;border:none;background:#6366f1;color:#fff;font-weight:600;font-size:13px;cursor:pointer">Открыть</button>
+  </div>`;
+  document.body.appendChild(d);
+  const input = d.querySelector('#tok-in');
+  const submit = () => {
+    const v = input.value.trim();
+    if (!v) return;
+    try { localStorage.setItem('dash_token', v); } catch (_) {}
+    location.replace(location.pathname); // reload без ?token= в URL
+  };
+  d.querySelector('#tok-go').addEventListener('click', submit);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  input.focus();
+}
+
 async function fetchState() {
   if (isFetchingState) return;
   isFetchingState = true;
   try {
     const res = await fetch(apiUrl('/api/state'));
+    if (res.status === 401) { showTokenPrompt(); return; }
     if (!res.ok) return;
     const data = await res.json();
     applyState(data);
