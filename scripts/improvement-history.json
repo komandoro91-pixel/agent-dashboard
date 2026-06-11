@@ -274,5 +274,9 @@
   {
     "date": "2026-06-10",
     "note": "Ripple glow on nav-btn click"
+  },
+  {
+    "date": "2026-06-11",
+    "note": "Floating lift animation on metric cards"
   }
 ]
