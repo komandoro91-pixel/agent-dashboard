@@ -71,6 +71,20 @@ header{
   z-index:20;
   column-gap:0;
 }
+header::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:1;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(129,140,248,.028) 3px,rgba(129,140,248,.028) 4px);
+  animation:header-scanline 8s linear infinite;
+  mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.6) 30%,rgba(0,0,0,.6) 70%,transparent 100%);
+}
+@keyframes header-scanline{
+  0%{background-position:0 0}
+  100%{background-position:0 52px}
+}
 header>*:not(:last-child)::after{
   content:'';
   display:block;

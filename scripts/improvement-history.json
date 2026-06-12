@@ -278,5 +278,9 @@
   {
     "date": "2026-06-11",
     "note": "Floating lift animation on metric cards"
+  },
+  {
+    "date": "2026-06-12",
+    "note": "Scanline shimmer overlay on header"
   }
 ]
