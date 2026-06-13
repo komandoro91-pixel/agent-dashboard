@@ -282,5 +282,9 @@
   {
     "date": "2026-06-12",
     "note": "Scanline shimmer overlay on header"
+  },
+  {
+    "date": "2026-06-13",
+    "note": "Iridescent shimmer on metric card borders"
   }
 ]

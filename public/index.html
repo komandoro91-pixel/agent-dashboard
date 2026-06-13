@@ -28,7 +28,7 @@ html,body{
 .b2{width:400px;height:350px;background:rgba(16,185,129,.07);bottom:-5%;right:5%}
 .b3{width:280px;height:280px;background:rgba(139,92,246,.08);top:35%;left:38%}
 .stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.metric-card{transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease;}.metric-card:hover{transform:translateY(-3px) scale(1.01);}.stars::before,.stars::after{content:'';position:absolute;inset:0;
+.metric-card{transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease;position:relative;}.metric-card::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(135deg,rgba(129,140,248,.0),rgba(34,211,238,.0),rgba(167,139,250,.0));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;transition:background .4s ease;}.metric-card:hover::before{background:linear-gradient(135deg,rgba(129,140,248,.55),rgba(34,211,238,.40),rgba(167,139,250,.50));animation:card-border-shimmer 2s linear infinite;background-size:200% 200%;}@keyframes card-border-shimmer{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}.metric-card:hover{transform:translateY(-3px) scale(1.01);}.stars::before,.stars::after{content:'';position:absolute;inset:0;
   background-image:
     radial-gradient(1px 1px at 12% 18%,rgba(129,140,248,.55) 0%,transparent 100%),
     radial-gradient(1px 1px at 28% 72%,rgba(34,211,238,.45) 0%,transparent 100%),
