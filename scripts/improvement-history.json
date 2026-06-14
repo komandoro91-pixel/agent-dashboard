@@ -286,5 +286,9 @@
   {
     "date": "2026-06-13",
     "note": "Iridescent shimmer on metric card borders"
+  },
+  {
+    "date": "2026-06-14",
+    "note": "Glowing particle trail on timeline events"
   }
 ]
