@@ -116,7 +116,11 @@ header>*{position:relative;}
 }
 .h-clock:hover{
   filter:drop-shadow(0 0 8px rgba(129,140,248,.70)) drop-shadow(0 0 16px rgba(34,211,238,.40));
-  animation:clock-gradient 2s ease infinite;
+  animation:clock-gradient 2s ease infinite,clock-hover-pulse 1.2s ease-in-out infinite;
+}
+@keyframes clock-hover-pulse{
+  0%,100%{letter-spacing:.06em;filter:drop-shadow(0 0 8px rgba(129,140,248,.70)) drop-shadow(0 0 16px rgba(34,211,238,.40))}
+  50%{letter-spacing:.10em;filter:drop-shadow(0 0 14px rgba(129,140,248,.95)) drop-shadow(0 0 28px rgba(34,211,238,.65)) drop-shadow(0 0 42px rgba(167,139,250,.30))}
 }
 @keyframes clock-gradient{
   0%{background-position:0% 50%}
