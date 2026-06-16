@@ -127,7 +127,7 @@ header>*{position:relative;}
   50%{background-position:100% 50%}
   100%{background-position:0% 50%}
 }
-.logo-wrap{display:flex;align-items:center;gap:10px}
+.nav-btn{position:relative;}.nav-btn::after{content:attr(title);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);background:rgba(7,7,14,.92);border:1px solid rgba(129,140,248,.30);color:var(--indigo);font-size:10px;font-family:var(--mono);letter-spacing:.08em;padding:3px 8px;border-radius:5px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease,box-shadow .2s ease;box-shadow:0 0 8px rgba(129,140,248,.20);}.nav-btn:hover::after{opacity:1;transform:translateX(-50%) translateY(0);box-shadow:0 0 12px rgba(129,140,248,.45),0 0 24px rgba(34,211,238,.15);animation:tooltip-glow 1.8s ease-in-out infinite;}@keyframes tooltip-glow{0%,100%{border-color:rgba(129,140,248,.30);box-shadow:0 0 8px rgba(129,140,248,.25)}50%{border-color:rgba(34,211,238,.55);box-shadow:0 0 14px rgba(129,140,248,.50),0 0 28px rgba(34,211,238,.25)}}.logo-wrap{display:flex;align-items:center;gap:10px}
 .logo-icon{
   width:26px;height:26px;border-radius:6px;
   background:linear-gradient(135deg,var(--indigo),var(--purple));
