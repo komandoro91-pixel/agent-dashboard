@@ -298,5 +298,9 @@
   {
     "date": "2026-06-16",
     "note": "Glowing tooltip shimmer on nav-btn hover"
+  },
+  {
+    "date": "2026-06-17",
+    "note": "Prismatic glow pulse on active nav pills"
   }
 ]
