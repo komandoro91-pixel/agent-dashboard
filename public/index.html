@@ -109,6 +109,28 @@ header>*{position:relative;}
   text-shadow:none;
   animation:clock-gradient 6s ease infinite,clock-breathe 4s ease-in-out infinite;
   transition:filter .4s ease;
+  position:relative;
+}
+.h-clock::before{
+  content:'';
+  position:absolute;
+  inset:-4px;
+  border-radius:8px;
+  background:transparent;
+  border:1px solid transparent;
+  background-image:linear-gradient(var(--bg),var(--bg)),linear-gradient(270deg,rgba(129,140,248,.0),rgba(34,211,238,.55),rgba(167,139,250,.0));
+  background-origin:border-box;
+  background-clip:padding-box,border-box;
+  animation:clock-ring-orbit 4s linear infinite;
+  pointer-events:none;
+  opacity:.7;
+}
+@keyframes clock-ring-orbit{
+  0%{background-image:linear-gradient(var(--bg),var(--bg)),linear-gradient(0deg,rgba(129,140,248,.0),rgba(34,211,238,.60),rgba(167,139,250,.0));opacity:.5}
+  25%{background-image:linear-gradient(var(--bg),var(--bg)),linear-gradient(90deg,rgba(129,140,248,.0),rgba(167,139,250,.60),rgba(34,211,238,.0));opacity:.8}
+  50%{background-image:linear-gradient(var(--bg),var(--bg)),linear-gradient(180deg,rgba(34,211,238,.0),rgba(129,140,248,.60),rgba(167,139,250,.0));opacity:.5}
+  75%{background-image:linear-gradient(var(--bg),var(--bg)),linear-gradient(270deg,rgba(167,139,250,.0),rgba(34,211,238,.60),rgba(129,140,248,.0));opacity:.8}
+  100%{background-image:linear-gradient(var(--bg),var(--bg)),linear-gradient(360deg,rgba(129,140,248,.0),rgba(34,211,238,.60),rgba(167,139,250,.0));opacity:.5}
 }
 @keyframes clock-breathe{
   0%,100%{filter:drop-shadow(0 0 0px rgba(129,140,248,0))}
