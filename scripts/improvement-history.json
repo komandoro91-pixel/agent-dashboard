@@ -306,5 +306,9 @@
   {
     "date": "2026-06-18",
     "note": "Pulsing glow ring on header logo icon"
+  },
+  {
+    "date": "2026-06-19",
+    "note": "Shimmer glow on timeline event hover"
   }
 ]
