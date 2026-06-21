@@ -96,8 +96,9 @@ header>*:not(:last-child)::after{
   pointer-events:none;
 }
 @keyframes header-sep-glow{
-  0%,100%{opacity:.5;filter:blur(0px)}
-  50%{opacity:1;filter:blur(.5px) drop-shadow(0 0 3px rgba(129,140,248,.60))}
+  0%,100%{opacity:.3;filter:blur(0px);height:60%;top:20%}
+  33%{opacity:.9;filter:blur(.8px) drop-shadow(0 0 5px rgba(129,140,248,.80)) drop-shadow(0 0 10px rgba(34,211,238,.40));height:70%;top:15%}
+  66%{opacity:.6;filter:blur(.3px) drop-shadow(0 0 3px rgba(167,139,250,.60));height:55%;top:22%}
 }
 header>*{position:relative;}
 .h-clock{
