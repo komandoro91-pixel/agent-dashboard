@@ -65,6 +65,7 @@ header{
   flex-shrink:0;
   display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
   padding:0 24px;height:52px;
+}header::after{content:'';position:absolute;right:18px;top:50%;transform:translateY(-50%);width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px 2px rgba(52,211,153,.55),0 0 14px 4px rgba(52,211,153,.25);animation:status-dot-pulse 2.4s ease-in-out infinite;z-index:22;pointer-events:none;}@keyframes status-dot-pulse{0%,100%{opacity:.7;box-shadow:0 0 5px 1px rgba(52,211,153,.45),0 0 10px 3px rgba(52,211,153,.18);}50%{opacity:1;box-shadow:0 0 10px 4px rgba(52,211,153,.80),0 0 22px 8px rgba(52,211,153,.35);}}header{
   background:rgba(7,7,14,.85);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid var(--b);box-shadow:0 1px 0 0 rgba(129,140,248,.18),0 2px 12px rgba(129,140,248,.10),0 4px 24px rgba(7,7,14,.60),inset 0 -1px 0 rgba(255,255,255,.04);position:relative;
