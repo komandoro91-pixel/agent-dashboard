@@ -127,6 +127,24 @@ header>*{position:relative;}
   pointer-events:none;
   opacity:.7;
 }
+.nav-btn.active::after{
+  content:'';
+  position:absolute;
+  bottom:-2px;
+  left:15%;
+  width:70%;
+  height:2px;
+  border-radius:2px;
+  background:linear-gradient(90deg,transparent,var(--indigo),var(--cyan),var(--purple),transparent);
+  background-size:200% 100%;
+  animation:nav-underline-slide 2.5s ease-in-out infinite;
+  box-shadow:0 0 6px 1px rgba(129,140,248,.60),0 0 12px 2px rgba(34,211,238,.35);
+  pointer-events:none;
+}
+@keyframes nav-underline-slide{
+  0%,100%{background-position:0% 50%;opacity:.7}
+  50%{background-position:100% 50%;opacity:1}
+}
 @keyframes clock-ring-orbit{
   0%{background-image:linear-gradient(var(--bg),var(--bg)),linear-gradient(0deg,rgba(129,140,248,.0),rgba(34,211,238,.60),rgba(167,139,250,.0));opacity:.5}
   25%{background-image:linear-gradient(var(--bg),var(--bg)),linear-gradient(90deg,rgba(129,140,248,.0),rgba(167,139,250,.60),rgba(34,211,238,.0));opacity:.8}
