@@ -334,5 +334,9 @@
   {
     "date": "2026-07-01",
     "note": "Animated gradient glow on metric card values"
+  },
+  {
+    "date": "2026-07-02",
+    "note": "Skeleton shimmer on timeline empty state"
   }
 ]
