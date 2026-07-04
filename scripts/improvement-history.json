@@ -342,5 +342,9 @@
   {
     "date": "2026-07-03",
     "note": "Floating glow shimmer on header bg"
+  },
+  {
+    "date": "2026-07-04",
+    "note": "Iridescent shimmer ring on metric cards hover"
   }
 ]
