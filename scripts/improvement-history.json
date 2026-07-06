@@ -350,5 +350,9 @@
   {
     "date": "2026-07-05",
     "note": "Staggered fade-in entrance on metric cards"
+  },
+  {
+    "date": "2026-07-06",
+    "note": "Neon glow pulse on timeline dot indicators"
   }
 ]
