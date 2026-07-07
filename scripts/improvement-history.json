@@ -354,5 +354,9 @@
   {
     "date": "2026-07-06",
     "note": "Neon glow pulse on timeline dot indicators"
+  },
+  {
+    "date": "2026-07-07",
+    "note": "Parallax depth shift on metric card hover"
   }
 ]
