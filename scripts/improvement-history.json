@@ -358,5 +358,9 @@
   {
     "date": "2026-07-07",
     "note": "Parallax depth shift on metric card hover"
+  },
+  {
+    "date": "2026-07-08",
+    "note": "Soft scroll-reveal fade on timeline events"
   }
 ]
