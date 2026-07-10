@@ -366,5 +366,9 @@
   {
     "date": "2026-07-09",
     "note": "Tooltip shimmer fade on metric card labels"
+  },
+  {
+    "date": "2026-07-10",
+    "note": "Scanline shimmer on timeline hover"
   }
 ]
