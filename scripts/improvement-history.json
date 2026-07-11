@@ -370,5 +370,9 @@
   {
     "date": "2026-07-10",
     "note": "Scanline shimmer on timeline hover"
+  },
+  {
+    "date": "2026-07-11",
+    "note": "Cyan accent bar slides in on timeline hover"
   }
 ]
