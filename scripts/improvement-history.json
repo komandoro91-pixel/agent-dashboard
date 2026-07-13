@@ -378,5 +378,9 @@
   {
     "date": "2026-07-12",
     "note": "Neon glow shimmer on nav pill hover"
+  },
+  {
+    "date": "2026-07-13",
+    "note": "Pulse glow ring on active nav pill"
   }
 ]
