@@ -382,5 +382,9 @@
   {
     "date": "2026-07-13",
     "note": "Pulse glow ring on active nav pill"
+  },
+  {
+    "date": "2026-07-14",
+    "note": "Gradient shimmer underline on metric card hover"
   }
 ]
