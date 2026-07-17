@@ -394,5 +394,9 @@
   {
     "date": "2026-07-16",
     "note": "Subtle value counter flip animation on update"
+  },
+  {
+    "date": "2026-07-17",
+    "note": "Prismatic icon glow on metric card hover"
   }
 ]
