@@ -410,5 +410,9 @@
   {
     "date": "2026-07-20",
     "note": "Staggered shimmer sweep on metric cards"
+  },
+  {
+    "date": "2026-07-21",
+    "note": "Tinted scrollbar for timeline panel"
   }
 ]
