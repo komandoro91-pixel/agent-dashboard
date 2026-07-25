@@ -426,5 +426,9 @@
   {
     "date": "2026-07-24",
     "note": "Gradient breathing on timeline panel bg"
+  },
+  {
+    "date": "2026-07-25",
+    "note": "Frosted status badge shimmer on hover"
   }
 ]
