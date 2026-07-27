@@ -434,5 +434,9 @@
   {
     "date": "2026-07-26",
     "note": "Skeleton shimmer on timeline timestamp"
+  },
+  {
+    "date": "2026-07-27",
+    "note": "Neon accent line pulse on nav hover"
   }
 ]
