@@ -446,5 +446,9 @@
   {
     "date": "2026-07-29",
     "note": "Smooth icon spin on metric card hover"
+  },
+  {
+    "date": "2026-07-30",
+    "note": "Glowing dot indicator on timeline events"
   }
 ]
