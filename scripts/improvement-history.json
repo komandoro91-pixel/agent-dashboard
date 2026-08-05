@@ -470,5 +470,9 @@
   {
     "date": "2026-08-04",
     "note": "Staggered fade-in shimmer on nav items"
+  },
+  {
+    "date": "2026-08-05",
+    "note": "Scrollbar thumb glow pulse animation"
   }
 ]
