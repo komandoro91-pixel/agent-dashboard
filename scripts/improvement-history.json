@@ -474,5 +474,9 @@
   {
     "date": "2026-08-05",
     "note": "Scrollbar thumb glow pulse animation"
+  },
+  {
+    "date": "2026-08-06",
+    "note": "Frosted glass panel entrance fade-slide animation"
   }
 ]
