@@ -478,5 +478,9 @@
   {
     "date": "2026-08-06",
     "note": "Frosted glass panel entrance fade-slide animation"
+  },
+  {
+    "date": "2026-08-07",
+    "note": "Twinkling star particle depth animation"
   }
 ]
