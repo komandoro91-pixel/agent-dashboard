@@ -502,5 +502,9 @@
   {
     "date": "2026-08-12",
     "note": "Floating glow aura on metric card hover"
+  },
+  {
+    "date": "2026-08-13",
+    "note": "Shimmer sweep on timeline timestamp hover"
   }
 ]
