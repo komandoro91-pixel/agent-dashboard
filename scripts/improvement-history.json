@@ -510,5 +510,9 @@
   {
     "date": "2026-08-14",
     "note": "Animated gradient border pulse on metric card"
+  },
+  {
+    "date": "2026-08-15",
+    "note": "Neon icon glow pulse on nav hover"
   }
 ]
