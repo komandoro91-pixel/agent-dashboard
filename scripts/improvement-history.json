@@ -518,5 +518,9 @@
   {
     "date": "2026-08-16",
     "note": "Subtle scale-up pulse on active nav item"
+  },
+  {
+    "date": "2026-08-17",
+    "note": "Breathing glow pulse on ambient blobs"
   }
 ]
