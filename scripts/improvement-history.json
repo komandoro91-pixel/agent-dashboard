@@ -522,5 +522,9 @@
   {
     "date": "2026-08-17",
     "note": "Breathing glow pulse on ambient blobs"
+  },
+  {
+    "date": "2026-08-18",
+    "note": "Ripple glow on metric card click"
   }
 ]
