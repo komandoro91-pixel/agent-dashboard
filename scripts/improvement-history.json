@@ -534,5 +534,9 @@
   {
     "date": "2026-08-20",
     "note": "Smooth glow trail on scrollbar thumb"
+  },
+  {
+    "date": "2026-08-21",
+    "note": "Staggered fade-in on metric cards"
   }
 ]
