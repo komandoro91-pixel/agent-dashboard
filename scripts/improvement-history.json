@@ -554,5 +554,9 @@
   {
     "date": "2026-08-25",
     "note": "Fade-in shimmer on timeline panel load"
+  },
+  {
+    "date": "2026-08-26",
+    "note": "Soft glow separator line on nav items"
   }
 ]
