@@ -566,5 +566,9 @@
   {
     "date": "2026-08-28",
     "note": "Subtle rotate shimmer on active nav underline"
+  },
+  {
+    "date": "2026-08-29",
+    "note": "Shimmer border sweep on card hover"
   }
 ]
