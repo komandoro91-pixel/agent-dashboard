@@ -570,5 +570,9 @@
   {
     "date": "2026-08-29",
     "note": "Shimmer border sweep on card hover"
+  },
+  {
+    "date": "2026-08-30",
+    "note": "Floating glow dot on active nav item"
   }
 ]
