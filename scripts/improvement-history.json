@@ -602,5 +602,9 @@
   {
     "date": "2026-09-06",
     "note": "Staggered fade-in on metric cards"
+  },
+  {
+    "date": "2026-09-07",
+    "note": "Frosted glass tint on scrollbar track"
   }
 ]
