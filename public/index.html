@@ -15,6 +15,27 @@
   --r:10px;--sans:-apple-system,'Inter','Segoe UI',sans-serif;
   --mono:'SF Mono','Cascadia Code','Consolas',monospace;
 }
+h2,h3,[class*='section-title'],[class*='panel-title'],[class*='card-title']{
+  position:relative;
+  display:inline-block;
+  padding-bottom:3px;
+}
+h2::after,h3::after,[class*='section-title']::after,[class*='panel-title']::after,[class*='card-title']::after{
+  content:'';
+  position:absolute;
+  left:0;bottom:0;
+  width:100%;height:1px;
+  border-radius:2px;
+  background:linear-gradient(90deg,var(--indigo),var(--cyan),var(--purple),transparent);
+  background-size:200% 100%;
+  opacity:.55;
+  animation:heading-line-flow 4s linear infinite;
+  box-shadow:0 0 6px rgba(34,211,238,.35),0 0 12px rgba(129,140,248,.25);
+}
+@keyframes heading-line-flow{
+  0%{background-position:200% 0;}
+  100%{background-position:-200% 0;}
+}
 
 /* ── Nav item underline sweep ── */
 nav a,nav button,.nav-item{position:relative;}
