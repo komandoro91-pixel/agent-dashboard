@@ -15,6 +15,9 @@
   --r:10px;--sans:-apple-system,'Inter','Segoe UI',sans-serif;
   --mono:'SF Mono','Cascadia Code','Consolas',monospace;
 }
+input,textarea,select{outline:none;border:1px solid var(--b);background:var(--glass);color:var(--text);border-radius:var(--r);padding:6px 10px;transition:border-color .3s ease,box-shadow .3s ease;}
+input:focus,textarea:focus,select:focus{border-color:rgba(129,140,248,.70);box-shadow:0 0 0 2px rgba(129,140,248,.18),0 0 10px rgba(34,211,238,.22),0 0 22px rgba(167,139,250,.14);animation:input-border-pulse 2.5s ease-in-out infinite;}
+@keyframes input-border-pulse{0%,100%{box-shadow:0 0 0 2px rgba(129,140,248,.18),0 0 10px rgba(34,211,238,.22),0 0 22px rgba(167,139,250,.14);}50%{box-shadow:0 0 0 3px rgba(129,140,248,.32),0 0 18px rgba(34,211,238,.40),0 0 36px rgba(167,139,250,.25);border-color:rgba(34,211,238,.80);}}
 [class*='status'],[class*='badge'],[class*='tag'],[class*='chip'],[class*='label']{
   position:relative;
   overflow:hidden;

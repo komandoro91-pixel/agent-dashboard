@@ -670,5 +670,9 @@
   {
     "date": "2026-09-23",
     "note": "Shimmer sweep on timeline row hover"
+  },
+  {
+    "date": "2026-09-24",
+    "note": "Neon border pulse on focused inputs"
   }
 ]
