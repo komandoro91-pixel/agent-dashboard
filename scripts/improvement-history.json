@@ -674,5 +674,9 @@
   {
     "date": "2026-09-24",
     "note": "Neon border pulse on focused inputs"
+  },
+  {
+    "date": "2026-09-25",
+    "note": "Soft glow halo on card focus-within"
   }
 ]
