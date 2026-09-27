@@ -18,7 +18,7 @@
 input,textarea,select{outline:none;border:1px solid var(--b);background:var(--glass);color:var(--text);border-radius:var(--r);padding:6px 10px;transition:border-color .3s ease,box-shadow .3s ease;}[class*='card']:focus-within,[class*='panel']:focus-within{box-shadow:0 0 0 1.5px rgba(129,140,248,.30),0 0 18px rgba(129,140,248,.18),0 0 36px rgba(34,211,238,.10);transition:box-shadow .4s ease;}
 input:focus,textarea:focus,select:focus{border-color:rgba(129,140,248,.70);box-shadow:0 0 0 2px rgba(129,140,248,.18),0 0 10px rgba(34,211,238,.22),0 0 22px rgba(167,139,250,.14);animation:input-border-pulse 2.5s ease-in-out infinite;}
 @keyframes input-border-pulse{0%,100%{box-shadow:0 0 0 2px rgba(129,140,248,.18),0 0 10px rgba(34,211,238,.22),0 0 22px rgba(167,139,250,.14);}50%{box-shadow:0 0 0 3px rgba(129,140,248,.32),0 0 18px rgba(34,211,238,.40),0 0 36px rgba(167,139,250,.25);border-color:rgba(34,211,238,.80);}}
-[class*='status'],[class*='badge'],[class*='tag'],[class*='chip'],[class*='label']{
+[class*='value'][class*='loading'],[class*='metric'][class*='loading'],[class*='stat'][class*='loading']{background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(129,140,248,.12) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;animation:skeleton-shimmer 1.6s ease-in-out infinite;border-radius:6px;color:transparent!important;user-select:none;min-width:60px;display:inline-block;}@keyframes skeleton-shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}[class*='status'],[class*='badge'],[class*='tag'],[class*='chip'],[class*='label']{
   position:relative;
   overflow:hidden;
 }
