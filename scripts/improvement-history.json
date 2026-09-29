@@ -690,5 +690,9 @@
   {
     "date": "2026-09-28",
     "note": "Tooltip fade-in on metric card hover"
+  },
+  {
+    "date": "2026-09-29",
+    "note": "Staggered fade-in on metric cards"
   }
 ]
