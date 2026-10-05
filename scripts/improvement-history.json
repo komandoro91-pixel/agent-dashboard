@@ -714,5 +714,9 @@
   {
     "date": "2026-10-04",
     "note": "Morphing gradient border on active nav item"
+  },
+  {
+    "date": "2026-10-05",
+    "note": "Frosted glass depth on nav active item"
   }
 ]
