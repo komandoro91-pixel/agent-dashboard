@@ -22,6 +22,14 @@ input:focus,textarea:focus,select:focus{border-color:rgba(129,140,248,.70);box-s
   position:relative;
   overflow:hidden;
 }
+[class*='status'][class*='active'],[class*='status'][class*='online'],[class*='status'][class*='running']{
+  box-shadow:0 0 0 2px rgba(52,211,153,.25),0 0 8px rgba(52,211,153,.30);
+  animation:status-dot-breathe 2.4s ease-in-out infinite;
+}
+@keyframes status-dot-breathe{
+  0%,100%{box-shadow:0 0 0 2px rgba(52,211,153,.20),0 0 6px rgba(52,211,153,.25);}
+  50%{box-shadow:0 0 0 4px rgba(52,211,153,.35),0 0 14px rgba(52,211,153,.50),0 0 24px rgba(34,211,238,.25);}
+}
 [class*='status']::after,[class*='badge']::after,[class*='tag']::after,[class*='chip']::after,[class*='label']::after{
   content:'';
   position:absolute;
