@@ -726,5 +726,9 @@
   {
     "date": "2026-10-07",
     "note": "Glowing icon pulse on metric card icons"
+  },
+  {
+    "date": "2026-10-08",
+    "note": "Shimmer sweep on hovered buttons"
   }
 ]
