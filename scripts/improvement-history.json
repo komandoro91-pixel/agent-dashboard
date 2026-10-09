@@ -730,5 +730,9 @@
   {
     "date": "2026-10-08",
     "note": "Shimmer sweep on hovered buttons"
+  },
+  {
+    "date": "2026-10-09",
+    "note": "Neon underline slide on nav links"
   }
 ]
