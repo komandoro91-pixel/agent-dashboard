@@ -734,5 +734,9 @@
   {
     "date": "2026-10-09",
     "note": "Neon underline slide on nav links"
+  },
+  {
+    "date": "2026-10-10",
+    "note": "Floating particle shimmer on glass cards"
   }
 ]
