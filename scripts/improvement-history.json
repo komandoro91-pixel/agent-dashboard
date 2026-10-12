@@ -742,5 +742,9 @@
   {
     "date": "2026-10-11",
     "note": "Glowing progress bar pulse on metric values"
+  },
+  {
+    "date": "2026-10-12",
+    "note": "Glowing caret pulse in focused inputs"
   }
 ]
