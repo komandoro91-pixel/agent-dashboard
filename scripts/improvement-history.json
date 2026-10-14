@@ -750,5 +750,9 @@
   {
     "date": "2026-10-13",
     "note": "Tooltip fade-in scale pop on card hover"
+  },
+  {
+    "date": "2026-10-14",
+    "note": "Skeleton shimmer on metric value load"
   }
 ]
