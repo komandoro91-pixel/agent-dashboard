@@ -758,5 +758,9 @@
   {
     "date": "2026-10-15",
     "note": "Magnetic tilt effect on metric cards"
+  },
+  {
+    "date": "2026-10-16",
+    "note": "Staggered fade-in on timeline rows"
   }
 ]
