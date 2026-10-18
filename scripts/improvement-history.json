@@ -766,5 +766,9 @@
   {
     "date": "2026-10-17",
     "note": "Iridescent scrollbar thumb color shift"
+  },
+  {
+    "date": "2026-10-18",
+    "note": "Avatar ring pulse on active status dots"
   }
 ]
