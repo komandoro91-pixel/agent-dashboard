@@ -778,5 +778,9 @@
   {
     "date": "2026-10-20",
     "note": "Glowing text shimmer on metric labels"
+  },
+  {
+    "date": "2026-10-21",
+    "note": "Ripple glow on status badge hover"
   }
 ]
