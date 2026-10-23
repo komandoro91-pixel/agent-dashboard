@@ -786,5 +786,9 @@
   {
     "date": "2026-10-22",
     "note": "Breathing glow pulse on focused inputs"
+  },
+  {
+    "date": "2026-10-23",
+    "note": "Shimmer sweep on button hover"
   }
 ]
