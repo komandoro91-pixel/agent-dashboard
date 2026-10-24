@@ -790,5 +790,9 @@
   {
     "date": "2026-10-23",
     "note": "Shimmer sweep on button hover"
+  },
+  {
+    "date": "2026-10-24",
+    "note": "Subtle icon pop scale on card hover"
   }
 ]
