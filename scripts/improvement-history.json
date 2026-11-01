@@ -822,5 +822,9 @@
   {
     "date": "2026-10-31",
     "note": "Neon count-up flash on metric value update"
+  },
+  {
+    "date": "2026-11-01",
+    "note": "Staggered card entrance fade-slide animation"
   }
 ]
