@@ -826,5 +826,9 @@
   {
     "date": "2026-11-01",
     "note": "Staggered card entrance fade-slide animation"
+  },
+  {
+    "date": "2026-11-02",
+    "note": "Prismatic shimmer on active tab label"
   }
 ]
