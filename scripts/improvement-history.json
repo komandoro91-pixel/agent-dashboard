@@ -834,5 +834,9 @@
   {
     "date": "2026-11-03",
     "note": "Glowing separator line between dashboard sections"
+  },
+  {
+    "date": "2026-11-04",
+    "note": "Soft glow halo on scrollbar thumb hover"
   }
 ]
