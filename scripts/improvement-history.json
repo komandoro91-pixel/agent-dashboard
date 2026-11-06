@@ -842,5 +842,9 @@
   {
     "date": "2026-11-05",
     "note": "Pulsing neon border on active status badges"
+  },
+  {
+    "date": "2026-11-06",
+    "note": "Glowing avatar ring on penguin/genie icons"
   }
 ]
