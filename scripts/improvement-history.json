@@ -858,5 +858,9 @@
   {
     "date": "2026-11-09",
     "note": "Shimmer sweep on tab hover"
+  },
+  {
+    "date": "2026-11-10",
+    "note": "Frosted glass shimmer on metric cards"
   }
 ]
