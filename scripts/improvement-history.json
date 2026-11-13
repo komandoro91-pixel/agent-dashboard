@@ -870,5 +870,9 @@
   {
     "date": "2026-11-12",
     "note": "Neon dot-pulse on active status indicator"
+  },
+  {
+    "date": "2026-11-13",
+    "note": "Magnetic lift effect on card hover"
   }
 ]
