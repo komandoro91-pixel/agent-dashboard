@@ -886,5 +886,9 @@
   {
     "date": "2026-11-16",
     "note": "Staggered fade-in glow on tab buttons"
+  },
+  {
+    "date": "2026-11-17",
+    "note": "Pulsing glow ring on active tab indicator"
   }
 ]
