@@ -890,5 +890,9 @@
   {
     "date": "2026-11-17",
     "note": "Pulsing glow ring on active tab indicator"
+  },
+  {
+    "date": "2026-11-18",
+    "note": "Glowing separator line between sidebar sections"
   }
 ]
