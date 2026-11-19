@@ -25,3 +25,12 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Dependencies
+node_modules/
+
+# Logs and local tooling
+*.log
+*.err
+.superpowers/
+.tasks/
