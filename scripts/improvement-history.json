@@ -902,5 +902,9 @@
   {
     "date": "2026-11-20",
     "note": "Neon cursor trail glow on scrollbar track"
+  },
+  {
+    "date": "2026-11-21",
+    "note": "Neon flicker glow on status badges"
   }
 ]
