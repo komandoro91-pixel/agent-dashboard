@@ -906,5 +906,9 @@
   {
     "date": "2026-11-21",
     "note": "Neon flicker glow on status badges"
+  },
+  {
+    "date": "2026-11-22",
+    "note": "Neon gradient glow on window title bar"
   }
 ]
