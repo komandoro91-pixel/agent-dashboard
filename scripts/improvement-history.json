@@ -910,5 +910,9 @@
   {
     "date": "2026-11-22",
     "note": "Neon gradient glow on window title bar"
+  },
+  {
+    "date": "2026-11-23",
+    "note": "Animated gradient border on focused inputs"
   }
 ]
