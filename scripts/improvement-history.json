@@ -914,5 +914,9 @@
   {
     "date": "2026-11-23",
     "note": "Animated gradient border on focused inputs"
+  },
+  {
+    "date": "2026-11-24",
+    "note": "Neon glow sweep on scrollbar thumb drag"
   }
 ]
