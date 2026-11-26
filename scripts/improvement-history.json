@@ -922,5 +922,9 @@
   {
     "date": "2026-11-25",
     "note": "Shimmer sweep on card hover overlay"
+  },
+  {
+    "date": "2026-11-26",
+    "note": "Neon glow flicker on rainbow title bar"
   }
 ]
