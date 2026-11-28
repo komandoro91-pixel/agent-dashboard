@@ -930,5 +930,9 @@
   {
     "date": "2026-11-27",
     "note": "Breathing glow pulse on sidebar avatar ring"
+  },
+  {
+    "date": "2026-11-28",
+    "note": "Neon glow pulse on metric cards"
   }
 ]
